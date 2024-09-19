@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	_ "github.com/marcboeker/go-duckdb"
 	"github.com/omaha/duckdb/pkg/models"
 )
 
@@ -28,6 +29,7 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	backend.Logger.Info("new datasource")
 	tmp := &models.PluginSettings{}
 	if err := json.Unmarshal(settings.JSONData, tmp); err != nil {
 		return nil, err
@@ -36,6 +38,7 @@ func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSetting
 	if err := ds.Init(tmp.DuckDbFilePath); err != nil {
 		return nil, err
 	}
+	backend.Logger.Info("done with new datasource")
 	return ds, nil
 }
 
@@ -47,13 +50,19 @@ type Datasource struct {
 	mutex sync.Mutex
 }
 
+//sql.Register("duckdb", duckdb.Driver
+
 func (d *Datasource) Init(path string) error {
+	backend.Logger.Info("init")
 	// check that file exists at path
 	if db, err := sql.Open("duckdb", path); err != nil {
+		backend.Logger.Info("error with init")
+		backend.Logger.Error(err.Error())
 		return err
 	} else {
 		d.db = db
 	}
+	backend.Logger.Info("done with init")
 	return nil
 }
 
@@ -132,9 +141,12 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	backend.Logger.Info("checking health")
 	res := &backend.CheckHealthResult{}
+	backend.Logger.Info("loading settings")
 	config, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
+	backend.Logger.Info("Done loading settings")
 
 	if err != nil {
 		res.Status = backend.HealthStatusError
