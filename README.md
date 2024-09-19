@@ -6,6 +6,14 @@ This template is a starting point for building a Data Source Plugin for Grafana.
 
 Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
 
+## Current State
+
+- Problems with `go-duckdb` compiling with `CGO_ENABLED=1`. Not clear if mage is respecting the env var...
+  - Running on mac seems to have problems because `go-duckdb` pulls in a static binary
+  - Running on linux failing because adding build tags or `CGO_ENABLED` through `mage` may not be working
+  - [Docs here](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file)
+    and [a handful of issues](https://github.com/marcboeker/go-duckdb/issues?q=is%3Aissue+undefined%3A+conn+is%3Aopen)
+
 ## Getting started
 
 ### Backend
