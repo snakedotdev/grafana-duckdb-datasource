@@ -2,8 +2,11 @@ package plugin
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"sync"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -24,13 +27,49 @@ var (
 )
 
 // NewDatasource creates a new datasource instance.
-func NewDatasource(_ context.Context, _ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return &Datasource{}, nil
+func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	tmp := &models.PluginSettings{}
+	if err := json.Unmarshal(settings.JSONData, tmp); err != nil {
+		return nil, err
+	}
+	ds := &Datasource{}
+	if err := ds.Init(tmp.DuckDbFilePath); err != nil {
+		return nil, err
+	}
+	return ds, nil
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
-type Datasource struct{}
+type Datasource struct {
+	db    *sql.DB
+	path  string
+	mutex sync.Mutex
+}
+
+func (d *Datasource) Init(path string) error {
+	// check that file exists at path
+	if db, err := sql.Open("duckdb", path); err != nil {
+		return err
+	} else {
+		d.db = db
+	}
+	return nil
+}
+
+// Execute query using a connection from the pool
+func (d *Datasource) executeQuery(ctx context.Context, query string) (*sql.Rows, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	// Get a connection from the pool
+	if rows, err := d.db.QueryContext(ctx, query); err != nil {
+		log.DefaultLogger.Error("Error executing query: %s", err.Error())
+		return nil, err
+	} else {
+		return rows, nil
+	}
+}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
@@ -103,9 +142,9 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 		return res, nil
 	}
 
-	if config.Secrets.ApiKey == "" {
+	if config.DuckDbFilePath == "" {
 		res.Status = backend.HealthStatusError
-		res.Message = "API key is missing"
+		res.Message = "Duck DB File Path is missing"
 		return res, nil
 	}
 
