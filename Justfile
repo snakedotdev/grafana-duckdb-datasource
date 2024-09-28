@@ -5,7 +5,7 @@ backend:
   mage -v build:linuxARM64
 
 backend-docker:
-  docker run --rm -e GOOS=linux -e GOARCH=arm64 -e CGO_ENABLED=1 -v "$PWD":/usr/src/app -w /usr/src/app build-image mage -v build:linuxARM64
+  docker run --rm -e MAGEFILE_DEBUG=true -e GOOS=linux -e CGO_ENABLED=1 -v "$PWD":/usr/src/app -w /usr/src/app build-image mage default
 
 frontend:
   npm run dev
