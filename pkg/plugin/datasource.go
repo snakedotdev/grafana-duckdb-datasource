@@ -51,6 +51,7 @@ func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSetting
 	// set up the call handler
 	routeMux := http.NewServeMux()
 	routeMux.HandleFunc("/table", ds.getTables)
+	routeMux.HandleFunc("/table/:tablename/column", ds.getColumns)
 	ds.resourceHandler = httpadapter.New(routeMux)
 
 	if err := ds.Init(); err != nil {
@@ -72,7 +73,12 @@ type Datasource struct {
 }
 
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
-	backend.Logger.Info("call resource")
+	backend.Logger.Info("call resource", "path", req.Path)
+	//return sender.Send(&backend.CallResourceResponse{
+	//	Status: 404,
+	//	Body:   []byte("Endpoint not found"),
+	//})
+
 	return d.resourceHandler.CallResource(ctx, req, sender)
 }
 
@@ -82,6 +88,50 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 //	}
 //	return nil
 //}
+
+func (d *Datasource) getColumns(rw http.ResponseWriter, req *http.Request) {
+	backend.Logger.Info("getColumns")
+	var columnList []string
+	const tableName = "test" // TODO: get from param
+	if r, err := d.executeQuery(req.Context(), "SELECT column_name FROM duckdb_columns where table_name=?;", tableName); err != nil {
+		backend.Logger.Error("error executing query", "error", err.Error())
+		return
+	} else {
+		defer func(r *sql.Rows) {
+			err := r.Close()
+			if err != nil {
+				backend.Logger.Error("error closing rows", "error", err.Error())
+			}
+		}(r)
+
+		if !r.Next() {
+			backend.Logger.Info("no rows found!")
+			rw.WriteHeader(http.StatusOK)
+			return
+		} else {
+			var columnName string
+			for {
+				if err := r.Scan(&columnName); err != nil {
+					backend.Logger.Error("error scanning row", err.Error())
+				}
+				columnList = append(columnList, columnName)
+
+				if !r.Next() {
+					break
+				}
+			}
+		}
+		if responseBody, err := json.Marshal(columnList); err != nil {
+			backend.Logger.Error("error marshalling response", "error", err.Error())
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		} else {
+			rw.WriteHeader(http.StatusOK)
+			rw.Write(responseBody)
+			return
+		}
+	}
+}
 
 func (d *Datasource) getTables(rw http.ResponseWriter, req *http.Request) {
 	backend.Logger.Info("getTables")
@@ -128,7 +178,7 @@ func (d *Datasource) getTables(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (d *Datasource) checkAndLoadDb() error {
-	// check whether file exists
+	// TODO: check whether file exists
 
 	// check the timestamp of last modified
 	// if it is newer from the last time
@@ -137,17 +187,21 @@ func (d *Datasource) checkAndLoadDb() error {
 		return err
 	} else {
 		lastModified := fileInfo.ModTime()
-		if lastModified.After(d.lastLoaded) {
+		// Not Equal instead of "After" so that we can roll back to older too
+		if !lastModified.Equal(d.lastLoaded) {
 			backend.Logger.Info("reloading database", "lastModified", lastModified, "lastLoaded", d.lastLoaded)
-			if err := d.db.Close(); err != nil {
-				backend.Logger.Error("error closing database", "error", err)
-				return err
+			if d.db != nil {
+				if err := d.db.Close(); err != nil {
+					backend.Logger.Error("error closing database", "error", err)
+					return err
+				}
 			}
 			if db, err := sql.Open("duckdb", d.path); err != nil {
 				backend.Logger.Info("error with init")
 				backend.Logger.Error("error initializing connection", "error", err)
 				return err
 			} else {
+				// if load is successful, we save the lastModified time for reference later
 				d.lastLoaded = lastModified
 				d.db = db
 			}
@@ -168,12 +222,12 @@ func (d *Datasource) Init() error {
 }
 
 // Execute query using a connection from the pool
-func (d *Datasource) executeQuery(ctx context.Context, query string) (*sql.Rows, error) {
+func (d *Datasource) executeQuery(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
 	// Get a connection from the pool
-	if rows, err := d.db.QueryContext(ctx, query); err != nil {
+	if rows, err := d.db.QueryContext(ctx, query, args); err != nil {
 		log.DefaultLogger.Error("Error executing query: %s", err.Error())
 		return nil, err
 	} else {
@@ -231,9 +285,7 @@ func (d *Datasource) query(ctx context.Context, pCtx backend.PluginContext, quer
 	if err != nil {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
 	}
-	backend.Logger.Info("Checking whether need to reload database...")
 
-	backend.Logger.Info("About to execute query...")
 	if r, err := d.executeQuery(ctx, "SELECT table_name FROM duckdb_tables;"); err != nil {
 		backend.Logger.Error("error executing query", err.Error())
 	} else {

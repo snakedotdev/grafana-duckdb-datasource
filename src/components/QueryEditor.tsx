@@ -21,9 +21,12 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     useEffect(() => {
         const fetchTables = async() => {
             try {
-                const response = await getBackendSrv().get(`/api/datasources/${datasource.id}/table`);
-                const tables = response.tables || [];
-                setTables(tables);
+                // const response = await getBackendSrv().get(`/api/datasources/${datasource.id}/table`);
+                const response = await getBackendSrv().get(`/api/datasources/${datasource.id}/resources/table`);
+                console.log(response)
+                const tables = response || [];
+                const tableOptions = tables.map((table: string) => ({ label: table, value: table }));
+                setTables(tableOptions);
             } catch (error) {
                 console.error('Error fetching tables:', error)
             }
@@ -40,8 +43,9 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
             }
             try {
                 const response = await getBackendSrv().get(`/api/datasources/${datasource.id}/table/${selectedTable}/column`)
-                const columns = response.columns || []
-                setColumns(columns)
+                const columns = response || []
+                const columnOptions = columns.map((column: string) => ({ label: column, value: column }))
+                setColumns(columnOptions)
             } catch (error) {
                 console.error('Error fetching columns:', error)
             }
