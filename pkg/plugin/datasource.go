@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
@@ -49,10 +50,10 @@ func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSetting
 	ds.queryHandler = queryTypeMux
 
 	// set up the call handler
-	routeMux := http.NewServeMux()
-	routeMux.HandleFunc("/table", ds.getTables)
-	routeMux.HandleFunc("/table/:tablename/column", ds.getColumns)
-	ds.resourceHandler = httpadapter.New(routeMux)
+	router := mux.NewRouter()
+	router.HandleFunc("/table", ds.getTables).Methods("GET")
+	router.HandleFunc("/table/{tablename}/column", ds.getColumns).Methods("GET")
+	ds.resourceHandler = httpadapter.New(router)
 
 	if err := ds.Init(); err != nil {
 		return nil, err
@@ -91,8 +92,9 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 
 func (d *Datasource) getColumns(rw http.ResponseWriter, req *http.Request) {
 	backend.Logger.Info("getColumns")
+	vars := mux.Vars(req)
 	var columnList []string
-	const tableName = "test" // TODO: get from param
+	tableName := vars["tablename"]
 	if r, err := d.executeQuery(req.Context(), "SELECT column_name FROM duckdb_columns where table_name=?;", tableName); err != nil {
 		backend.Logger.Error("error executing query", "error", err.Error())
 		return
@@ -227,7 +229,7 @@ func (d *Datasource) executeQuery(ctx context.Context, query string, args ...any
 	defer d.mutex.Unlock()
 
 	// Get a connection from the pool
-	if rows, err := d.db.QueryContext(ctx, query, args); err != nil {
+	if rows, err := d.db.QueryContext(ctx, query, args...); err != nil {
 		log.DefaultLogger.Error("Error executing query: %s", err.Error())
 		return nil, err
 	} else {
