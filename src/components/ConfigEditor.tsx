@@ -1,9 +1,10 @@
 import React, { ChangeEvent } from 'react';
 import {InlineField, Input, } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions, MySecureJsonData } from '../types';
+import { MySecureJsonData } from '../types';
+import {SQLOptions} from "@grafana/sql";
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions, MySecureJsonData> {}
+interface Props extends DataSourcePluginOptionsEditorProps<SQLOptions, MySecureJsonData> {}
 
 export function ConfigEditor(props: Props) {
   const { onOptionsChange, options } = props;
@@ -22,7 +23,7 @@ export function ConfigEditor(props: Props) {
       <InlineField label="Path" labelWidth={14} interactive tooltip={'Json field returned to frontend'}>
         <Input
             className="width-30"
-            value={jsonData.duckDbFilePath || ''}
+            value={jsonData.database || ''}
             onChange={onDuckDbFilePathChange}
             placeholder="Path to DuckDB file"
         />
