@@ -1,9 +1,9 @@
 import { DataSourcePlugin } from '@grafana/data';
-import { DataSource } from './datasource';
+import { DuckDbDatasource } from './datasource';
 import { ConfigEditor } from './components/ConfigEditor';
 import { QueryEditor } from './components/QueryEditor';
-import { MyQuery, MyDataSourceOptions } from './types';
+import {SQLOptions, SQLQuery} from "@grafana/sql";
 
-export const plugin = new DataSourcePlugin<DataSource, MyQuery, MyDataSourceOptions>(DataSource)
+export const plugin = new DataSourcePlugin<DuckDbDatasource, SQLQuery, SQLOptions>(DuckDbDatasource)
   .setConfigEditor(ConfigEditor)
   .setQueryEditor(QueryEditor);

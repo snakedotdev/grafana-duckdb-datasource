@@ -1,15 +1,14 @@
-import { DataSourceJsonData } from '@grafana/data';
-import { DataQuery } from '@grafana/schema';
+import {SQLOptions, SQLQuery} from '@grafana/sql'
 
-export interface MyQuery extends DataQuery {
+export interface DuckDbQuery extends SQLQuery {
   queryText?: string;
-  constant: number;
-  table: string;
-  columns: string[];
+  // constant: number;
+  table?: string | undefined;
+  // columns: string[];
 }
 
-export const DEFAULT_QUERY: Partial<MyQuery> = {
-  constant: 6.5,
+export const DEFAULT_QUERY: Partial<DuckDbQuery> = {
+  // constant: 6.5,
 };
 
 export interface DataPoint {
@@ -24,8 +23,20 @@ export interface DataSourceResponse {
 /**
  * These are options configured for each DataSource instance
  */
-export interface MyDataSourceOptions extends DataSourceJsonData {
+export interface DuckDbOptions extends SQLOptions {
   duckDbFilePath: string;
+  // tlsAuth: boolean;
+  // tlsAuthWithCACert: boolean;
+  // timezone: string;
+  // tlsSkipVerify: boolean;
+  // user: string;
+  // database: string;
+  // url: string;
+  // timeInterval: string;
+  // maxOpenConns: number;
+  // maxIdleConns: number;
+  // maxIdleConnsAuto: boolean;
+  // connMaxLifetime: number;
 }
 
 /**

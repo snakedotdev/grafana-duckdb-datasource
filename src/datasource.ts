@@ -1,26 +1,122 @@
-import { DataSourceInstanceSettings, CoreApp, ScopedVars } from '@grafana/data';
-import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
+import { DataSourceInstanceSettings, ScopedVars } from '@grafana/data';
+import { TemplateSrv } from '@grafana/runtime';
+import {SqlDatasource, DB, SQLQuery, SQLSelectableValue, formatSQL, SQLOptions} from '@grafana/sql';
+import { fetchColumns, fetchTables, getSqlCompletionProvider } from './sqlCompletionProvider';
+// @ts-ignore
+import { LanguageDefinition } from '@grafana/experimental';
+import { getFieldConfig, toRawSql } from './sqlUtil';
 
-import { MyQuery, MyDataSourceOptions, DEFAULT_QUERY } from './types';
+import {getVersion, getTimescaleDBVersion} from "./postgresMetaQuery";
 
-export class DataSource extends DataSourceWithBackend<MyQuery, MyDataSourceOptions> {
-  constructor(instanceSettings: DataSourceInstanceSettings<MyDataSourceOptions>) {
+
+import {PostgresQueryModel} from "./PostgresQueryModel";
+import {getSchema, showTables} from "./postgresMetaQuery";
+
+export class DuckDbDatasource extends SqlDatasource {
+  sqlLanguageDefinition: LanguageDefinition | undefined = undefined;
+
+  constructor(instanceSettings: DataSourceInstanceSettings<SQLOptions>) {
     super(instanceSettings);
   }
 
-  getDefaultQuery(_: CoreApp): Partial<MyQuery> {
-    return DEFAULT_QUERY;
+  getQueryModel(target?: SQLQuery, templateSrv?: TemplateSrv, scopedVars?: ScopedVars): PostgresQueryModel {
+    return new PostgresQueryModel(target, templateSrv, scopedVars);
   }
 
-  applyTemplateVariables(query: MyQuery, scopedVars: ScopedVars) {
+
+  async getVersion(): Promise<string> {
+    const value = await this.runSql<{ version: number }>(getVersion());
+    const results = value.fields.version?.values;
+
+    if (!results) {
+      return '';
+    }
+
+    return results[0].toString();
+  }
+
+  async getTimescaleDBVersion(): Promise<string | undefined> {
+    const value = await this.runSql<{ extversion: string }>(getTimescaleDBVersion());
+    const results = value.fields.extversion?.values;
+
+    if (!results) {
+      return undefined;
+    }
+
+    return results[0];
+  }
+
+  async fetchTables(): Promise<string[]> {
+    const tables = await this.runSql<{ table: string[] }>(showTables(), { refId: 'tables' });
+    return tables.fields.table?.values.flat() ?? [];
+  }
+
+  getSqlLanguageDefinition(db: DB): LanguageDefinition {
+    if (this.sqlLanguageDefinition !== undefined) {
+      return this.sqlLanguageDefinition;
+    }
+
+    const args = {
+      getColumns: { current: (query: SQLQuery) => fetchColumns(db, query) },
+      getTables: { current: () => fetchTables(db) },
+    };
+    this.sqlLanguageDefinition = {
+      id: 'pgsql',
+      completionProvider: getSqlCompletionProvider(args),
+      formatter: formatSQL,
+    };
+    return this.sqlLanguageDefinition;
+  }
+
+
+  async fetchFields(query: SQLQuery): Promise<SQLSelectableValue[]> {
+    const { table } = query;
+    if (table === undefined) {
+      // if no table-name, we are not able to query for fields
+      return [];
+    }
+    const schema = await this.runSql<{ column: string; type: string }>(getSchema(table), { refId: 'columns' });
+    const result: SQLSelectableValue[] = [];
+    for (let i = 0; i < schema.length; i++) {
+      const column = schema.fields.column.values[i];
+      const type = schema.fields.type.values[i];
+      result.push({ label: column, value: column, type, ...getFieldConfig(type) });
+    }
+    return result;
+  }
+
+
+  getDB(): DB {
+    if (this.db !== undefined) {
+      return this.db;
+    }
+
     return {
-      ...query,
-      queryText: getTemplateSrv().replace(query.queryText, scopedVars),
+      init: () => Promise.resolve(true),
+      datasets: () => Promise.resolve([]),
+      tables: () => this.fetchTables(),
+      getEditorLanguageDefinition: () => this.getSqlLanguageDefinition(this.db),
+      fields: async (query: SQLQuery) => {
+        if (!query?.table) {
+          return [];
+        }
+        return this.fetchFields(query);
+      },
+      validateQuery: (query) =>
+          Promise.resolve({ isError: false, isValid: true, query, error: '', rawSql: query.rawSql }),
+      dsID: () => this.id,
+      toRawSql,
+      lookup: async () => {
+        const tables = await this.fetchTables();
+        return tables.map((t) => ({ name: t, completion: t }));
+      },
     };
   }
 
-  filterQuery(query: MyQuery): boolean {
-    // if no query has been provided, prevent the query from being executed
-    return !!query.queryText;
-  }
+  // applyTemplateVariables(query: MyQuery, scopedVars: ScopedVars) {
+  //   return {
+  //     ...query,
+  //     queryText: getTemplateSrv().replace(query.queryText, scopedVars),
+  //   };
+  // }
 }
