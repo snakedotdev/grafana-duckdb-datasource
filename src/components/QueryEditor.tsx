@@ -14,20 +14,20 @@ import { QueryHeader, QueryHeaderProps } from './QueryHeader';
 import { RawEditor } from './query-editor-raw/RawEditor';
 import { VisualEditor } from './visual-query-builder/VisualEditor';
 
-import React from "react"
+import React from "react";
 
-interface SqlQueryEditorProps extends QueryEditorProps<DuckDbDatasource, DuckDbQuery, DuckDbOptions> {
+interface DuckDbQueryEditorProps extends QueryEditorProps<DuckDbDatasource, DuckDbQuery, DuckDbOptions> {
     queryHeaderProps?: Pick<QueryHeaderProps, 'dialect'>;
 }
 
-export function SqlQueryEditor({
-                                   datasource,
-                                   query,
-                                   onChange,
-                                   onRunQuery,
-                                   range,
-                                   queryHeaderProps,
-                               }: SqlQueryEditorProps) {
+export function DuckDbQueryEditor({
+                                      datasource,
+                                      query,
+                                      onChange,
+                                      onRunQuery,
+                                      range,
+                                      queryHeaderProps,
+                                  }: DuckDbQueryEditorProps) {
     const [isQueryRunnable, setIsQueryRunnable] = useState(true);
     const db = datasource.getDB(datasource.id);
 

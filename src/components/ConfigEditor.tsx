@@ -1,10 +1,9 @@
 import React, { ChangeEvent } from 'react';
 import {InlineField, Input, } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MySecureJsonData } from '../types';
-import {SQLOptions} from "@grafana/sql";
+import { MySecureJsonData, DuckDbOptions } from '../types';
 
-interface Props extends DataSourcePluginOptionsEditorProps<SQLOptions, MySecureJsonData> {}
+interface Props extends DataSourcePluginOptionsEditorProps<DuckDbOptions, MySecureJsonData> {}
 
 export function ConfigEditor(props: Props) {
   const { onOptionsChange, options } = props;

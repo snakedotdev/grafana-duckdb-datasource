@@ -1,9 +1,9 @@
 import { EditorMode } from '@grafana/experimental';
 
-import { QueryFormat, SQLQuery } from './types';
+import {DuckDbQuery, QueryFormat} from './types';
 import { createFunctionField, setGroupByField } from './utils/sql.utils';
 
-export function applyQueryDefaults(q?: SQLQuery): SQLQuery {
+export function applyQueryDefaults(q?: DuckDbQuery): DuckDbQuery {
     let editorMode = q?.editorMode || EditorMode.Builder;
 
     // Switching to code editor if the query was created before visual query builder was introduced.
@@ -11,7 +11,7 @@ export function applyQueryDefaults(q?: SQLQuery): SQLQuery {
         editorMode = EditorMode.Code;
     }
 
-    const result: SQLQuery = {
+    const result: DuckDbQuery = {
         ...q,
         refId: q?.refId || 'A',
         format: q?.format !== undefined ? q.format : QueryFormat.Table,

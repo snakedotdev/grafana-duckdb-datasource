@@ -1,9 +1,9 @@
 import { AnnotationQuery } from '@grafana/data';
 
 import { applyQueryDefaults } from '../defaults';
-import { SQLQuery } from '../types';
+import { DuckDbQuery } from '../types';
 
-export default function migrateAnnotation(annotation: AnnotationQuery<SQLQuery>) {
+export default function migrateAnnotation(annotation: AnnotationQuery<DuckDbQuery>) {
   const oldQuery = typeof annotation.rawQuery === 'string' ? annotation.rawQuery : null;
 
   if (!oldQuery) {

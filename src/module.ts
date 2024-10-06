@@ -4,8 +4,8 @@ import { ConfigEditor } from './components/ConfigEditor';
 
 import {DuckDbQueryEditor} from './DuckDbQueryEditor'
 // import { QueryEditor } from './components/QueryEditor';
-import {SQLOptions, SQLQuery} from "@grafana/sql";
+import {DuckDbOptions, DuckDbQuery} from "./types";
 
-export const plugin = new DataSourcePlugin<DuckDbDatasource, SQLQuery, SQLOptions>(DuckDbDatasource)
+export const plugin = new DataSourcePlugin<DuckDbDatasource, DuckDbQuery, DuckDbOptions>(DuckDbDatasource)
   .setConfigEditor(ConfigEditor)
   .setQueryEditor(DuckDbQueryEditor);
