@@ -17,6 +17,7 @@ import { isString } from 'lodash';
 import { dateTime, toOption } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
 import { Button, DateTimePicker, Input, Select } from '@grafana/ui';
+import React from "react"
 
 const buttonLabels = {
   add: 'Add',

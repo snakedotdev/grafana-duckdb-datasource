@@ -10,7 +10,7 @@ import { SQLGroupByRow } from './SQLGroupByRow';
 import { SQLOrderByRow } from './SQLOrderByRow';
 import { SQLSelectRow } from './SQLSelectRow';
 import { SQLWhereRow } from './SQLWhereRow';
-
+import React from "react"
 interface VisualEditorProps extends QueryEditorProps {
   db: DB;
   queryRowFilter: QueryRowFilter;

@@ -7,6 +7,7 @@ import { formattedValueToString, getValueFormat, TimeRange } from '@grafana/data
 import { Icon, Spinner, useTheme2 } from '@grafana/ui';
 
 import { DB, SQLQuery, ValidationResults } from '../../types';
+import React from "react"
 
 export interface QueryValidatorProps {
   db: DB;

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SQLExpression } from '../../types';
 
 import { emptyInitTree, raqbConfig } from './AwesomeQueryBuilder';
+import React from "react"
 
 interface SQLBuilderWhereRowProps {
   sql: SQLExpression;

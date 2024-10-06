@@ -6,6 +6,7 @@ import { reportInteraction } from '@grafana/runtime';
 import { CodeEditor, Field, IconButton, useStyles2 } from '@grafana/ui';
 
 import { formatSQL } from '../../utils/formatSQL';
+import React from "react"
 
 type PreviewProps = {
   rawSql: string;

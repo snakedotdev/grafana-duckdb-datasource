@@ -11,6 +11,7 @@ import { SQLQuery, QueryEditorProps } from '../../types';
 
 import { QueryEditorRaw } from './QueryEditorRaw';
 import { QueryToolbox } from './QueryToolbox';
+import React from "react"
 
 interface RawEditorProps extends Omit<QueryEditorProps, 'onChange'> {
   onRunQuery: () => void;

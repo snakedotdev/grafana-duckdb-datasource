@@ -10,6 +10,8 @@ import { useSqlChange } from '../../utils/useSqlChange';
 import { Config } from './AwesomeQueryBuilder';
 import { WhereRow } from './WhereRow';
 
+import React from "react"
+
 interface WhereRowProps {
   query: QueryWithDefaults;
   fields: SelectableValue[];
