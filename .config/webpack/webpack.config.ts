@@ -150,6 +150,16 @@ const config = async (env): Promise<Configuration> => {
             filename: Boolean(env.production) ? '[hash][ext]' : '[file]',
           },
         },
+        {
+          test: /\.ts$/,
+          use: 'ts-loader',
+          exclude: /node_modules\/(?!@grafana\/sql)/, // Exclude node_modules, but include the specific library
+        },
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules\/(?!@grafana\/sql)/,
+        },
       ],
     },
 
@@ -248,6 +258,9 @@ const config = async (env): Promise<Configuration> => {
     ],
 
     resolve: {
+      // alias: {
+      //   '@grafana/experimental': path.resolve(__dirname, '../node_modules/@grafana/experimental'),
+      // },
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       // handle resolving "rootDir" paths
       modules: [path.resolve(process.cwd(), 'src'), 'node_modules'],
