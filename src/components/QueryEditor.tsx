@@ -16,7 +16,7 @@ import { VisualEditor } from './visual-query-builder/VisualEditor';
 
 import React from "react";
 
-interface DuckDbQueryEditorProps extends QueryEditorProps<DuckDbDatasource, DuckDbQuery, DuckDbOptions> {
+export interface DuckDbQueryEditorProps extends QueryEditorProps<DuckDbDatasource, DuckDbQuery, DuckDbOptions> {
     queryHeaderProps?: Pick<QueryHeaderProps, 'dialect'>;
 }
 

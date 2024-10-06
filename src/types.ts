@@ -1,4 +1,4 @@
-import {SQLOptions, SQLQuery} from '@grafana/sql'
+import {SQLOptions} from '@grafana/sql'
 
 export interface DuckDbQuery extends SQLQuery {
   queryText?: string;
@@ -48,7 +48,7 @@ export interface MySecureJsonData {
 import { JsonTree } from '@react-awesome-query-builder/ui';
 
 import {
-  DataFrame,
+  DataFrame, DataQuery,
   // DataQuery,
   // DataSourceJsonData,
   MetricFindValue,
@@ -57,9 +57,10 @@ import {
   toOption as toOptionFromData,
 } from '@grafana/data';
 import {
-  CompletionItemKind,
+  CompletionItemKind, EditorMode,
   // EditorMode,
-  LanguageDefinition } from '@grafana/experimental';
+  LanguageDefinition
+} from '@grafana/experimental';
 
 import { QueryWithDefaults } from './defaults';
 import {
@@ -100,16 +101,16 @@ export enum QueryFormat {
   Table = 'table',
 }
 
-// export interface SQLQuery extends DataQuery {
-//   alias?: string;
-//   format?: QueryFormat;
-//   rawSql?: string;
-//   dataset?: string;
-//   table?: string;
-//   sql?: SQLExpression;
-//   editorMode?: EditorMode;
-//   rawQuery?: boolean;
-// }
+export interface SQLQuery extends DataQuery {
+  alias?: string;
+  format?: QueryFormat;
+  rawSql?: string;
+  dataset?: string;
+  table?: string;
+  sql?: SQLExpression;
+  editorMode?: EditorMode;
+  rawQuery?: boolean;
+}
 
 export interface NameValue {
   name: string;
