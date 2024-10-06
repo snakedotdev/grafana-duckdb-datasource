@@ -10,12 +10,13 @@ export function ConfigEditor(props: Props) {
   const { onOptionsChange, options } = props;
   const { jsonData } = options;
 
+  // let path = ""
   const onDuckDbFilePathChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const jsonData = {
-      ...options.jsonData,
-      duckDbFilePath: event.target.value,
+    const jsonDataOutput = {
+      ...jsonData,
+      database: event.target.value,
     };
-    onOptionsChange({ ...options, jsonData });
+    onOptionsChange({ ...options, jsonData: jsonDataOutput });
   };
 
   return (

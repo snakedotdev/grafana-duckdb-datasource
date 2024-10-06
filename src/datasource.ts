@@ -86,7 +86,7 @@ export class DuckDbDatasource extends SqlDatasource {
   }
 
 
-  getDB(): DB {
+  getDB(id: number): DB {
     if (this.db !== undefined) {
       return this.db;
     }
