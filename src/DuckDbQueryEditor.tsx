@@ -1,11 +1,11 @@
-import { SqlQueryEditor, QueryHeaderProps } from '@grafana/sql';
+import {DuckDbQueryEditor, DuckDbQueryEditorProps} from "./components/QueryEditor";
+import {QueryHeaderProps} from "./components/QueryHeader";
 
 import React from 'react';
-import {DuckDbQueryEditorProps} from "./components/QueryEditor";
 
 const queryHeaderProps: Pick<QueryHeaderProps, 'dialect'> = { dialect: 'postgres' };
 
-export function DuckDbQueryEditor(props: DuckDbQueryEditorProps) {
+export function NewDuckDbQueryEditor(props: DuckDbQueryEditorProps) {
     // TODO: convert DuckDbDatasource into a SqlDatasource for the editor...?
-    return <SqlQueryEditor {...props} datasource={} queryHeaderProps={queryHeaderProps} />;
+    return <DuckDbQueryEditor {...props} queryHeaderProps={queryHeaderProps} />;
 }
