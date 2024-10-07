@@ -41,7 +41,7 @@ func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSetting
 	}
 
 	ds := &Datasource{
-		path: tmp.DuckDbFilePath,
+		path: tmp.Database,
 	}
 
 	// set up query data handler
@@ -181,6 +181,7 @@ func (d *Datasource) getTables(rw http.ResponseWriter, req *http.Request) {
 
 func (d *Datasource) checkAndLoadDb() error {
 	// TODO: check whether file exists
+	backend.Logger.Info("Path to init", "path", d.path)
 
 	// check the timestamp of last modified
 	// if it is newer from the last time
@@ -350,7 +351,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 		return res, nil
 	}
 
-	if config.DuckDbFilePath == "" {
+	if config.Database == "" {
 		res.Status = backend.HealthStatusError
 		res.Message = "Duck DB File Path is missing"
 		return res, nil

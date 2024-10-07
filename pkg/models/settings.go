@@ -9,6 +9,7 @@ import (
 
 type PluginSettings struct {
 	DuckDbFilePath string                `json:"duckDbFilePath"`
+	Database       string                `json:"database"`
 	Secrets        *SecretPluginSettings `json:"-"`
 }
 
