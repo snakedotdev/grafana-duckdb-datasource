@@ -7,16 +7,15 @@ export function getTimescaleDBVersion() {
 }
 
 export function showTables() {
-    return `select quote_ident(table_name) as "table" from information_schema.tables
-    where quote_ident(table_schema) not in ('information_schema',
+    return `select "table_name" as "table" from information_schema.tables
+    where "table_schema" not in ('information_schema',
                              'pg_catalog',
                              '_timescaledb_cache',
                              '_timescaledb_catalog',
                              '_timescaledb_internal',
                              '_timescaledb_config',
                              'timescaledb_information',
-                             'timescaledb_experimental')
-      and ${buildSchemaConstraint()}`;
+                             'timescaledb_experimental')`;
 }
 
 export function getSchema(table: string) {
@@ -24,23 +23,37 @@ export function getSchema(table: string) {
     // in the table-name
     const tableNamePart = "'" + table.replace(/'/g, "''") + "'";
 
-    return `select quote_ident(column_name) as "column", data_type as "type"
+    return `select "column_name" as "column", "data_type" as "type"
     from information_schema.columns
-    where quote_ident(table_name) = ${tableNamePart};
+    where "table_name" = ${tableNamePart};
     `;
 }
 
-function buildSchemaConstraint() {
-    // quote_ident protects hyphenated schemes
-    return `
-          quote_ident(table_schema) IN (
-          SELECT
-            CASE WHEN trim(s[i]) = '"$user"' THEN user ELSE trim(s[i]) END
-          FROM
-            generate_series(
-              array_lower(string_to_array(current_setting('search_path'),','),1),
-              array_upper(string_to_array(current_setting('search_path'),','),1)
-            ) as i,
-            string_to_array(current_setting('search_path'),',') s
-          )`;
-}
+// function buildSchemaConstraint() {
+//     return ``
+//     return `
+//       "table_schema" IN (
+//         SELECT
+//           CASE
+//             WHEN trim(schema_element) = '"$user"' THEN 'user'  -- Replace 'user' with the actual logic
+//             ELSE trim(schema_element)
+//           END
+//         FROM (
+//           SELECT unnest(str_split(current_setting('search_path'), ',')) AS schema_element
+//         )
+//       )
+//     `
+//
+//     // quote_ident protects hyphenated schemes
+//     return `
+//           "table_schema" IN (
+//           SELECT
+//             CASE WHEN trim(s[i]) = '"$user"' THEN user ELSE trim(s[i]) END
+//           FROM
+//             generate_series(
+//               array_lower(string_to_array(current_setting('search_path'),','),1),
+//               array_upper(string_to_array(current_setting('search_path'),','),1)
+//             ) as i,
+//             string_to_array(current_setting('search_path'),',') s
+//           )`;
+// }

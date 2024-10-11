@@ -182,6 +182,7 @@ func (e *DataSourceHandler) QueryData(ctx context.Context, req *backend.QueryDat
 		}
 
 		wg.Add(1)
+		backend.Logger.Info("running the query time!")
 		go e.executeQuery(query, &wg, ctx, ch, queryjson)
 	}
 
@@ -191,6 +192,7 @@ func (e *DataSourceHandler) QueryData(ctx context.Context, req *backend.QueryDat
 	close(ch)
 	result.Responses = make(map[string]backend.DataResponse)
 	for queryResult := range ch {
+		backend.Logger.Info("query response", queryResult.dataResponse)
 		result.Responses[queryResult.refID] = queryResult.dataResponse
 	}
 
