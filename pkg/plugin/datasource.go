@@ -9,8 +9,12 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/grafana/grafana-plugin-sdk-go/data/sqlutil"
+	"github.com/omaha/duckdb/pkg/plugin/sqleng"
 	"net/http"
 	"os"
+	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
@@ -27,9 +31,9 @@ import (
 // backend.CheckHealthHandler interfaces. Plugin should not implement all these
 // interfaces - only those which are required for a particular task.
 var (
-	_ backend.QueryDataHandler      = (*Datasource)(nil)
-	_ backend.CheckHealthHandler    = (*Datasource)(nil)
-	_ instancemgmt.InstanceDisposer = (*Datasource)(nil)
+	_ backend.QueryDataHandler      = (*sqleng.DataSourceHandler)(nil)
+	_ backend.CheckHealthHandler    = (*sqleng.DataSourceHandler)(nil)
+	_ instancemgmt.InstanceDisposer = (*sqleng.DataSourceHandler)(nil)
 )
 
 // NewDatasource creates a new datasource instance.
@@ -274,7 +278,17 @@ func (d *Datasource) handleQueryFallback(ctx context.Context, req *backend.Query
 	return response, nil
 }
 
-type queryModel struct{}
+type passedDatasource struct {
+	Type string `json:"type"`
+	Uid  string `json:"uid"`
+}
+
+type queryModel struct {
+	Datasource passedDatasource `json:"datasource"`
+	Format     string           `json:"format"`
+	RawSQL     string           `json:"rawSql"`
+	RefId      string           `json:"refId"`
+}
 
 func (d *Datasource) query(ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	var response backend.DataResponse
@@ -282,12 +296,13 @@ func (d *Datasource) query(ctx context.Context, pCtx backend.PluginContext, quer
 	// Unmarshal the JSON into our queryModel.
 	var qm queryModel
 
-	backend.Logger.Info("Query: ", query.JSON)
+	backend.Logger.Info("Passed Query", "query", query.JSON)
 
 	err := json.Unmarshal(query.JSON, &qm)
 	if err != nil {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
 	}
+	backend.Logger.Info("Parsed Query", "queryModel", qm)
 
 	if r, err := d.executeQuery(ctx, "SELECT table_name FROM duckdb_tables;"); err != nil {
 		backend.Logger.Error("error executing query", err.Error())
@@ -361,4 +376,244 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 		Status:  backend.HealthStatusOk,
 		Message: "Data source is working",
 	}, nil
+}
+
+type Cfg struct {
+	Random string `json:"random"`
+}
+
+type Service struct {
+	im     instancemgmt.InstanceManager
+	logger log.Logger
+}
+
+func ProvideService(cfg *Cfg) *Service {
+	logger := backend.NewLoggerWith("logger", "tsdb.duckdb")
+	s := &Service{
+		logger: logger,
+	}
+	s.im = datasource.NewInstanceManager(s.NewInstanceSettings())
+	return s
+}
+
+func (s *Service) NewInstanceSettings() datasource.InstanceFactoryFunc {
+	logger := s.logger
+	return func(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+		cfg := backend.GrafanaConfigFromContext(ctx)
+		sqlCfg, err := cfg.SQL()
+		if err != nil {
+			return nil, err
+		}
+
+		jsonData := sqleng.JsonData{
+			MaxOpenConns:        sqlCfg.DefaultMaxOpenConns,
+			MaxIdleConns:        sqlCfg.DefaultMaxIdleConns,
+			ConnMaxLifetime:     sqlCfg.DefaultMaxConnLifetimeSeconds,
+			Timescaledb:         false,
+			ConfigurationMethod: "file-path",
+			SecureDSProxy:       false,
+		}
+
+		err = json.Unmarshal(settings.JSONData, &jsonData)
+		if err != nil {
+			return nil, fmt.Errorf("error reading settings: %w", err)
+		}
+
+		database := jsonData.Database
+		if database == "" {
+			database = settings.Database
+		}
+
+		dsInfo := sqleng.DataSourceInfo{
+			JsonData:                jsonData,
+			URL:                     settings.URL,
+			User:                    settings.User,
+			Database:                database,
+			ID:                      settings.ID,
+			Updated:                 settings.Updated,
+			UID:                     settings.UID,
+			DecryptedSecureJSONData: settings.DecryptedSecureJSONData,
+		}
+
+		userFacingDefaultError, err := cfg.UserFacingDefaultError()
+		if err != nil {
+			return nil, err
+		}
+
+		_, handler, err := newDuckDb(ctx, userFacingDefaultError, sqlCfg.RowLimit, dsInfo, logger, settings)
+
+		if err != nil {
+			logger.Error("Failed connecting to Postgres", "err", err)
+			return nil, err
+		}
+
+		logger.Debug("Successfully connected to Postgres")
+		return handler, nil
+	}
+}
+
+func (s *Service) getDSInfo(ctx context.Context, pluginCtx backend.PluginContext) (*sqleng.DataSourceHandler, error) {
+	i, err := s.im.Get(ctx, pluginCtx)
+	if err != nil {
+		return nil, err
+	}
+	instance := i.(*sqleng.DataSourceHandler)
+	return instance, nil
+}
+
+func (s *Service) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	dsInfo, err := s.getDSInfo(ctx, req.PluginContext)
+	if err != nil {
+		return nil, err
+	}
+	return dsInfo.QueryData(ctx, req)
+}
+
+// CheckHealth pings the connected SQL database
+func (s *Service) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	dsHandler, err := s.getDSInfo(ctx, req.PluginContext)
+	if err != nil {
+		return nil, err
+	}
+
+	err = dsHandler.Ping()
+
+	if err != nil {
+		s.logger.Error("Check health failed", "error", err)
+		return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: dsHandler.TransformQueryError(s.logger, err).Error()}, nil
+	}
+
+	return &backend.CheckHealthResult{Status: backend.HealthStatusOk, Message: "Database Connection OK"}, nil
+}
+
+// Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
+// created. As soon as datasource settings change detected by SDK old datasource instance will
+// be disposed and a new one will be created using NewSampleDatasource factory function.
+func (s *Service) Dispose() {
+	// Clean up datasource instance resources.
+}
+
+func newDuckDb(ctx context.Context, userFacingDefaultError string, rowLimit int64, dsInfo sqleng.DataSourceInfo, logger log.Logger, settings backend.DataSourceInstanceSettings) (*sql.DB, *sqleng.DataSourceHandler, error) {
+	//proxyClient, err := settings.ProxyClient(ctx)
+	//if err != nil {
+	//	logger.Error("postgres proxy creation failed", "error", err)
+	//	return nil, nil, fmt.Errorf("postgres proxy creation failed")
+	//}
+
+	config := sqleng.DataPluginConfiguration{
+		DSInfo:            dsInfo,
+		MetricColumnTypes: []string{"UNKNOWN", "TEXT", "VARCHAR", "CHAR"},
+		RowLimit:          rowLimit,
+	}
+
+	queryResultTransformer := duckDbQueryResultTransformer{}
+
+	if db, err := sql.Open("duckdb", "some.db"); err != nil {
+		backend.Logger.Error("error loading database...", "error", err)
+		return nil, nil, err
+	} else {
+
+		//
+		//db.SetMaxOpenConns(config.DSInfo.JsonData.MaxOpenConns)
+		//db.SetMaxIdleConns(config.DSInfo.JsonData.MaxIdleConns)
+		//db.SetConnMaxLifetime(time.Duration(config.DSInfo.JsonData.ConnMaxLifetime) * time.Second)
+
+		handler, err := sqleng.NewQueryDataHandler(userFacingDefaultError, db, config, &queryResultTransformer, newPostgresMacroEngine(dsInfo.JsonData.Timescaledb),
+			logger)
+		if err != nil {
+			logger.Error("Failed connecting to DuckDB", "err", err)
+			return nil, nil, err
+		}
+
+		logger.Debug("Successfully connected to DuckDB")
+		return db, handler, nil
+	}
+}
+
+type duckDbQueryResultTransformer struct{}
+
+func (t *duckDbQueryResultTransformer) TransformQueryError(_ log.Logger, err error) error {
+	return err
+}
+
+func (t *duckDbQueryResultTransformer) GetConverterList() []sqlutil.StringConverter {
+	return []sqlutil.StringConverter{
+		{
+			Name:           "handle FLOAT4",
+			InputScanKind:  reflect.Interface,
+			InputTypeName:  "FLOAT4",
+			ConversionFunc: func(in *string) (*string, error) { return in, nil },
+			Replacer: &sqlutil.StringFieldReplacer{
+				OutputFieldType: data.FieldTypeNullableFloat64,
+				ReplaceFunc: func(in *string) (any, error) {
+					if in == nil {
+						return nil, nil
+					}
+					v, err := strconv.ParseFloat(*in, 64)
+					if err != nil {
+						return nil, err
+					}
+					return &v, nil
+				},
+			},
+		},
+		{
+			Name:           "handle FLOAT8",
+			InputScanKind:  reflect.Interface,
+			InputTypeName:  "FLOAT8",
+			ConversionFunc: func(in *string) (*string, error) { return in, nil },
+			Replacer: &sqlutil.StringFieldReplacer{
+				OutputFieldType: data.FieldTypeNullableFloat64,
+				ReplaceFunc: func(in *string) (any, error) {
+					if in == nil {
+						return nil, nil
+					}
+					v, err := strconv.ParseFloat(*in, 64)
+					if err != nil {
+						return nil, err
+					}
+					return &v, nil
+				},
+			},
+		},
+		{
+			Name:           "handle NUMERIC",
+			InputScanKind:  reflect.Interface,
+			InputTypeName:  "NUMERIC",
+			ConversionFunc: func(in *string) (*string, error) { return in, nil },
+			Replacer: &sqlutil.StringFieldReplacer{
+				OutputFieldType: data.FieldTypeNullableFloat64,
+				ReplaceFunc: func(in *string) (any, error) {
+					if in == nil {
+						return nil, nil
+					}
+					v, err := strconv.ParseFloat(*in, 64)
+					if err != nil {
+						return nil, err
+					}
+					return &v, nil
+				},
+			},
+		},
+		{
+			Name:           "handle INT2",
+			InputScanKind:  reflect.Interface,
+			InputTypeName:  "INT2",
+			ConversionFunc: func(in *string) (*string, error) { return in, nil },
+			Replacer: &sqlutil.StringFieldReplacer{
+				OutputFieldType: data.FieldTypeNullableInt16,
+				ReplaceFunc: func(in *string) (any, error) {
+					if in == nil {
+						return nil, nil
+					}
+					i64, err := strconv.ParseInt(*in, 10, 16)
+					if err != nil {
+						return nil, err
+					}
+					v := int16(i64)
+					return &v, nil
+				},
+			},
+		},
+	}
 }
