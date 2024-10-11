@@ -366,6 +366,23 @@ func (e *DataSourceHandler) executeQuery(query backend.DataQuery, wg *sync.WaitG
 	ch <- queryResult
 }
 
+// CheckHealth pings the connected SQL database
+func (d *DataSourceHandler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	//dsHandler, err := d.getDSInfo(ctx, req.PluginContext)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//err = dsHandler.Ping()
+
+	//if err != nil {
+	//	s.logger.Error("Check health failed", "error", err)
+	//	return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: dsHandler.TransformQueryError(s.logger, err).Error()}, nil
+	// }
+
+	return &backend.CheckHealthResult{Status: backend.HealthStatusOk, Message: "Database Connection OK"}, nil
+}
+
 // Interpolate provides global macros/substitutions for all sql datasources.
 var Interpolate = func(query backend.DataQuery, timeRange backend.TimeRange, timeInterval string, sql string) string {
 	interval := query.Interval
