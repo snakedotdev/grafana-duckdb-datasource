@@ -1,0 +1,17 @@
+# Command to build your project
+build.cmd = "mage default"   # Run the `mage build` task instead of `go build`
+
+# Optional: If you want to run your app after building
+# run.cmd = "./myapp"
+
+build.include_dir=["pkg"]
+build.include_file=["go.mod", "go.sum"]
+build.exclude_dir=["node_modules"]
+
+# Watch file extensions
+build.include_ext = [
+    "go",
+    "html",
+    "js",
+    "css"
+]
