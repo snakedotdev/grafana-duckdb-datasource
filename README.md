@@ -1,10 +1,13 @@
-# Grafana data source plugin template
+# DuckDB Grafana DataSource Plugin
 
-This template is a starting point for building a Data Source Plugin for Grafana.
+This DataSource plugin for Grafana uses the [grafana plugin sdk](todo) to:
 
-## What are Grafana data source plugins?
-
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+- Reference a [DuckDB](TODO) file on disk
+- Reload the DuckDB connection any time the timestamp on the file has changed
+  (on linux systems, it is possible to copy a file on top of another one, even in the "ReadMany" mode for DuckDB)
+- Allow a `preSql` configuration to customize connection initialization
+- Use the familiar `grafana-sql` query interface for query building
+- Fetch data from DuckDB to serve Grafana views
 
 ## Current State
 
@@ -13,6 +16,11 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
   - Running on linux failing because adding build tags or `CGO_ENABLED` through `mage` may not be working
   - [Docs here](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file)
     and [a handful of issues](https://github.com/marcboeker/go-duckdb/issues?q=is%3Aissue+undefined%3A+conn+is%3Aopen)
+- We ended up building on Ubuntu (for both ARM and x86 architectures)
+- CI is set up in [`.github/workflows`](./.github/workflows)
+- The `grafana-sql` package and friends are unfortunately considered `experimental`
+  - As a result, the build process necessitated us forking the Grafana build pipeline (their packages are not public)
+  - So we have a custom `npm` repository set up at https://npm.api.benetist.com
 
 ## Getting started
 
