@@ -36,12 +36,13 @@ export function ConfigEditor(props: Props) {
             placeholder="Path to DuckDB file"
         />
       </InlineField>
-      <InlineField label="PreSql" labelWidth={14} interactive tooltip={'(Optional) SQL to run when connection is established'}>
+      <InlineField label="Initialization SQL" labelWidth={18} interactive tooltip={'(Optional) SQL to run when connection is established'}>
         <TextArea
           className="width-30"
           value={jsonData.preSql || ''}
           onChange={onDuckDbPreSqlChange}
           placeholder=""
+          rows={5}
           />
       </InlineField>
     </>
