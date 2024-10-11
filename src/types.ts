@@ -24,7 +24,7 @@ export interface DataSourceResponse {
  * These are options configured for each DataSource instance
  */
 export interface DuckDbOptions extends SQLOptions {
-  duckDbFilePath: string;
+  preSql: string;
   // tlsAuth: boolean;
   // tlsAuthWithCACert: boolean;
   // timezone: string;
