@@ -25,6 +25,7 @@ export interface DataSourceResponse {
  */
 export interface DuckDbOptions extends SQLOptions {
   preSql: string;
+  reloadAutomatically: boolean;
   // tlsAuth: boolean;
   // tlsAuthWithCACert: boolean;
   // timezone: string;
