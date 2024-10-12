@@ -16,6 +16,7 @@ describe('Annotation migration', () => {
     rawQuery:
       "SELECT\n  createdAt as time,\n  'single' as text,\n hostname as tags\nFROM\n   grafana_metric\nWHERE\n  $__timeFilter(createdAt)\nORDER BY time\nLIMIT 1\n",
     showIn: 0,
+    // @ts-ignore
     tags: [],
     type: 'tags',
   };

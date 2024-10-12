@@ -1,3 +1,4 @@
+//@ts-ignore
 import {SQLOptions} from '@grafana/sql'
 
 export interface DuckDbQuery extends SQLQuery {

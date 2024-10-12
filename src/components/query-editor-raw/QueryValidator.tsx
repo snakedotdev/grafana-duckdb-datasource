@@ -48,6 +48,7 @@ export function QueryValidator({ db, query, onValidate, range }: QueryValidatorP
   );
 
   const [,] = useDebounce(
+    // @ts-ignore
     async () => {
       const result = await validateQuery(query);
       if (result) {

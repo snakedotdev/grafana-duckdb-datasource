@@ -20,6 +20,7 @@ import {
   reportInteraction,
   TemplateSrv, toDataQueryResponse
 } from '@grafana/runtime';
+//@ts-ignore
 import {DB, SQLSelectableValue, formatSQL} from '@grafana/sql';
 import { fetchColumns, fetchTables, getSqlCompletionProvider } from './sqlCompletionProvider';
 // @ts-ignore
@@ -29,15 +30,21 @@ import { getFieldConfig, toRawSql } from './sqlUtil';
 import {getVersion, getTimescaleDBVersion, getSchema, showTables} from "./postgresMetaQuery";
 
 import {DuckDbOptions, DuckDbQuery} from "./types";
+//@ts-ignore
 import {QueryFormat} from "@grafana/sql/src/types";
+//@ts-ignore
 import {ResponseParser} from "@grafana/sql/src/ResponseParser";
+//@ts-ignore
 import migrateAnnotation from "@grafana/sql/src/utils/migration";
+//@ts-ignore
 import {SqlQueryEditor} from "@grafana/sql/src/components/QueryEditor";
 import {lastValueFrom, Observable, throwError} from "rxjs";
 import {
   isSqlDatasourceDatabaseSelectionFeatureFlagEnabled
+//@ts-ignore
 } from "@grafana/sql/src/components/QueryEditorFeatureFlag.utils";
 import {map} from "rxjs/operators";
+//@ts-ignore
 import {MACRO_NAMES} from "@grafana/sql/src/constants";
 import {PostgresQueryModel} from "./PostgresQueryModel";
 
@@ -167,7 +174,7 @@ export class DuckDbDatasource extends DataSourceWithBackend<DuckDbQuery, DuckDbO
     this.name = instanceSettings.name;
     this.responseParser = new ResponseParser();
     this.id = instanceSettings.id;
-    const settingsData = instanceSettings.jsonData || {};
+    const settingsData: DuckDbOptions = instanceSettings.jsonData || {} as DuckDbOptions;
     this.interval = settingsData.timeInterval || '1m';
     this.db = this.getDB(instanceSettings.id);
     /*
@@ -380,7 +387,7 @@ export class DuckDbDatasource extends DataSourceWithBackend<DuckDbQuery, DuckDbO
       }
     }
 
-    return;
+    return null;
   }
 
   async metricFindQuery(query: string, options?: LegacyMetricFindQueryOptions): Promise<MetricFindValue[]> {

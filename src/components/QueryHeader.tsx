@@ -86,7 +86,9 @@ export function QueryHeader({
         const next = {
             ...query,
             dataset: e.value,
+            // @ts-ignore
             table: undefined,
+            // @ts-ignore
             sql: undefined,
             rawSql: '',
         };

@@ -60,7 +60,7 @@ export function RawEditor({ db, query, onChange, onRunQuery, onValidate, queryTo
   const renderEditor = (standalone = false) => {
     return standalone ? (
       <AutoSizer>
-        {({ width, height }) => {
+        {({ width, height}: {width: number, height: number}) => {
           return renderQueryEditor(width, height);
         }}
       </AutoSizer>

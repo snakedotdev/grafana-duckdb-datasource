@@ -6,6 +6,8 @@ import {
     TableIdentifier,
 // @ts-ignore
 } from '@grafana/experimental';
+
+//@ts-ignore
 import { DB, SQLQuery } from '@grafana/sql';
 
 interface CompletionProviderGetterArgs {
