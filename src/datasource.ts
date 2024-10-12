@@ -1,5 +1,5 @@
 import {
-  CoreApp, DataFrame, DataFrameView, DataQuery,
+  CoreApp, DataFrame, DataFrameView,
   DataQueryRequest,
   DataQueryResponse,
   DataSourceInstanceSettings,
@@ -10,6 +10,8 @@ import {
   ScopedVars, TimeRange,
   VariableWithMultiSupport
 } from '@grafana/data';
+
+import { DataQuery} from '@grafana/schema'
 import {
   BackendDataSourceResponse,
   DataSourceWithBackend, FetchResponse,
@@ -24,9 +26,8 @@ import { fetchColumns, fetchTables, getSqlCompletionProvider } from './sqlComple
 import {EditorMode, LanguageDefinition} from '@grafana/experimental';
 import { getFieldConfig, toRawSql } from './sqlUtil';
 
-import {getVersion, getTimescaleDBVersion} from "./postgresMetaQuery";
+import {getVersion, getTimescaleDBVersion, getSchema, showTables} from "./postgresMetaQuery";
 
-import {getSchema, showTables} from "./postgresMetaQuery";
 import {DuckDbOptions, DuckDbQuery} from "./types";
 import {QueryFormat} from "@grafana/sql/src/types";
 import {ResponseParser} from "@grafana/sql/src/ResponseParser";
@@ -385,7 +386,7 @@ export class DuckDbDatasource extends DataSourceWithBackend<DuckDbQuery, DuckDbO
   async metricFindQuery(query: string, options?: LegacyMetricFindQueryOptions): Promise<MetricFindValue[]> {
     const range = options?.range;
     if (range == null) {
-      // i cannot create a scenario where this happens, we handle it just to be sure.
+      // I cannot create a scenario where this happens, we handle it just to be sure.
       return [];
     }
 

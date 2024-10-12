@@ -49,7 +49,7 @@ export interface MySecureJsonData {
 import { JsonTree } from '@react-awesome-query-builder/ui';
 
 import {
-  DataFrame, DataQuery,
+  DataFrame,
   // DataQuery,
   // DataSourceJsonData,
   MetricFindValue,
@@ -57,6 +57,7 @@ import {
   TimeRange,
   toOption as toOptionFromData,
 } from '@grafana/data';
+import {DataQuery} from '@grafana/schema'
 import {
   CompletionItemKind, EditorMode,
   // EditorMode,

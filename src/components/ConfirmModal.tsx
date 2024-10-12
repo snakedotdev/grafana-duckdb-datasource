@@ -58,7 +58,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
     paddingLeft: theme.spacing(2),
   }),
   modalHeaderTitle: css({
-    fontSize: theme.typography.size.lg,
+    fontSize: theme.typography.fontSize,
     float: 'left',
     paddingTop: theme.spacing(1),
     margin: theme.spacing(0, 2),

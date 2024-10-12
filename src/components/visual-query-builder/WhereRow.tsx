@@ -19,14 +19,14 @@ export function WhereRow({ sql, config, onSqlChange }: SQLBuilderWhereRowProps) 
   useEffect(() => {
     // Set the initial tree
     if (!tree) {
-      const initTree = Utils.checkTree(Utils.loadTree(sql.whereJsonTree ?? emptyInitTree), configWithDefaults);
-      setTree(initTree);
+      const initTree = Utils.Validation.sanitizeTree(Utils.loadTree(sql.whereJsonTree ?? emptyInitTree), configWithDefaults);
+      setTree(initTree.fixedTree);
     }
   }, [configWithDefaults, sql.whereJsonTree, tree]);
 
   useEffect(() => {
     if (!sql.whereJsonTree) {
-      setTree(Utils.checkTree(Utils.loadTree(emptyInitTree), configWithDefaults));
+      setTree(Utils.Validation.sanitizeTree(Utils.loadTree(emptyInitTree), configWithDefaults).fixedTree);
     }
   }, [configWithDefaults, sql.whereJsonTree]);
 
