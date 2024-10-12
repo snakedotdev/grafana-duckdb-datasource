@@ -203,7 +203,7 @@ func (d *Datasource) checkAndLoadDb() error {
 					return err
 				}
 			}
-			if db, err := sql.Open("duckdb", d.path); err != nil {
+			if db, err := sql.Open("duckdb", fmt.Sprintf("%s?access_mode=read_only", d.path)); err != nil {
 				backend.Logger.Info("error with init")
 				backend.Logger.Error("error initializing connection", "error", err)
 				return err
@@ -412,6 +412,8 @@ func (s *Service) NewInstanceSettings() datasource.InstanceFactoryFunc {
 			Timescaledb:         false,
 			ConfigurationMethod: "file-path",
 			SecureDSProxy:       false,
+			PreSql:              "",
+			ReloadAutomatically: true,
 		}
 
 		err = json.Unmarshal(settings.JSONData, &jsonData)
@@ -509,26 +511,16 @@ func newDuckDb(ctx context.Context, userFacingDefaultError string, rowLimit int6
 
 	queryResultTransformer := duckDbQueryResultTransformer{}
 
-	if db, err := sql.Open("duckdb", "some.db"); err != nil {
-		backend.Logger.Error("error loading database...", "error", err)
+	handler, err := sqleng.NewQueryDataHandler(userFacingDefaultError, config, &queryResultTransformer,
+		newPostgresMacroEngine(dsInfo.JsonData.Timescaledb),
+		logger)
+	if err != nil {
+		logger.Error("Failed connecting to DuckDB", "err", err)
 		return nil, nil, err
-	} else {
-
-		//
-		//db.SetMaxOpenConns(config.DSInfo.JsonData.MaxOpenConns)
-		//db.SetMaxIdleConns(config.DSInfo.JsonData.MaxIdleConns)
-		//db.SetConnMaxLifetime(time.Duration(config.DSInfo.JsonData.ConnMaxLifetime) * time.Second)
-
-		handler, err := sqleng.NewQueryDataHandler(userFacingDefaultError, db, config, &queryResultTransformer, newPostgresMacroEngine(dsInfo.JsonData.Timescaledb),
-			logger)
-		if err != nil {
-			logger.Error("Failed connecting to DuckDB", "err", err)
-			return nil, nil, err
-		}
-
-		logger.Debug("Successfully connected to DuckDB")
-		return db, handler, nil
 	}
+
+	logger.Debug("Successfully connected to DuckDB")
+	return nil, handler, nil
 }
 
 type duckDbQueryResultTransformer struct{}

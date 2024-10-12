@@ -3,10 +3,13 @@ package sqleng
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/marcboeker/go-duckdb"
 	"net"
+	"os"
 	"regexp"
 	"runtime/debug"
 	"strconv"
@@ -38,6 +41,8 @@ type SqlQueryResultTransformer interface {
 }
 
 type JsonData struct {
+	PreSql                  string `json:"preSql"`
+	ReloadAutomatically     bool   `json:"reloadAutomatically"`
 	MaxOpenConns            int    `json:"maxOpenConns"`
 	MaxIdleConns            int    `json:"maxIdleConns"`
 	ConnMaxLifetime         int    `json:"connMaxLifetime"`
@@ -67,6 +72,7 @@ type DataSourceInfo struct {
 	Database                string
 	ID                      int64
 	Updated                 time.Time
+	lastLoaded              time.Time
 	UID                     string
 	DecryptedSecureJSONData map[string]string
 }
@@ -82,6 +88,7 @@ type DataSourceHandler struct {
 	macroEngine            SQLMacroEngine
 	queryResultTransformer SqlQueryResultTransformer
 	db                     *sql.DB
+	connector              *duckdb.Connector
 	timeColumnNames        []string
 	metricColumnTypes      []string
 	log                    log.Logger
@@ -99,6 +106,67 @@ type QueryJson struct {
 	Format       string  `json:"format"`
 }
 
+func (e *DataSourceHandler) initDatabaseConnection() error {
+	if connector, err := duckdb.NewConnector(fmt.Sprintf("%s?access_mode=read_only", e.dsInfo.Database), func(execer driver.ExecerContext) error {
+		var bootQueries []string
+		if e.dsInfo.JsonData.PreSql != "" {
+			bootQueries = append(bootQueries, e.dsInfo.JsonData.PreSql)
+		}
+
+		for _, query := range bootQueries {
+			if _, err := execer.ExecContext(context.Background(), query, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		backend.Logger.Error("error creating database connector", "error", err)
+		return err
+	} else {
+		db := sql.OpenDB(connector)
+		e.db = db
+		return nil
+	}
+}
+
+// maybeReloadDatabase checks whether the database needs to be reloaded. If ReloadAutomatically==true, then it only
+// reloads when the last-modified timestamp of the database is different from the timestamp of the last loaded database.
+func (e *DataSourceHandler) maybeReloadDatabase() error {
+	// if needed (only at init) or if enabled (the default)
+	if e.db == nil || e.dsInfo.JsonData.ReloadAutomatically {
+		verb := "reloading"
+		if e.db == nil {
+			verb = "loading"
+		}
+		// check the timestamp of last modified
+		// if it is different from the last time
+		// we loaded the db, then reload the db
+		// (NOTE: _different_, not _newer_. Rolling back is ok too)
+		if fileInfo, err := os.Stat(e.dsInfo.Database); err != nil {
+			return err
+		} else {
+			lastModified := fileInfo.ModTime()
+			// Not Equal instead of "After" so that we can roll back to older too
+			if !lastModified.Equal(e.dsInfo.lastLoaded) {
+				backend.Logger.Info(verb+" database", "lastModified", lastModified, "lastLoaded", e.dsInfo.lastLoaded)
+				if e.db != nil {
+					if err := e.db.Close(); err != nil {
+						backend.Logger.Error("error closing database", "error", err)
+						return err
+					}
+				}
+				if err := e.initDatabaseConnection(); err != nil {
+					backend.Logger.Error("error creating database connection", "error", err)
+					return err
+				}
+				// if load is successful, we save the lastModified time for reference later
+				e.dsInfo.lastLoaded = lastModified
+			}
+		}
+	}
+	return nil
+}
+
 func (e *DataSourceHandler) TransformQueryError(logger log.Logger, err error) error {
 	// OpError is the error type usually returned by functions in the net
 	// package. It describes the operation, network type, and address of
@@ -113,7 +181,7 @@ func (e *DataSourceHandler) TransformQueryError(logger log.Logger, err error) er
 	return e.queryResultTransformer.TransformQueryError(logger, err)
 }
 
-func NewQueryDataHandler(userFacingDefaultError string, db *sql.DB, config DataPluginConfiguration, queryResultTransformer SqlQueryResultTransformer,
+func NewQueryDataHandler(userFacingDefaultError string, config DataPluginConfiguration, queryResultTransformer SqlQueryResultTransformer,
 	macroEngine SQLMacroEngine, log log.Logger) (*DataSourceHandler, error) {
 	queryDataHandler := DataSourceHandler{
 		queryResultTransformer: queryResultTransformer,
@@ -133,7 +201,9 @@ func NewQueryDataHandler(userFacingDefaultError string, db *sql.DB, config DataP
 		queryDataHandler.metricColumnTypes = config.MetricColumnTypes
 	}
 
-	queryDataHandler.db = db
+	if err := queryDataHandler.maybeReloadDatabase(); err != nil {
+		return nil, err
+	}
 	return &queryDataHandler, nil
 }
 
@@ -158,6 +228,11 @@ func (e *DataSourceHandler) Ping() error {
 
 func (e *DataSourceHandler) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	result := backend.NewQueryDataResponse()
+
+	if err := e.maybeReloadDatabase(); err != nil {
+		return nil, err
+	}
+
 	ch := make(chan DBDataResponse, len(req.Queries))
 	var wg sync.WaitGroup
 	// Execute each query in a goroutine and wait for them to finish afterwards
@@ -211,7 +286,7 @@ func (e *DataSourceHandler) executeQuery(query backend.DataQuery, wg *sync.WaitG
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("ExecuteQuery panic", "error", r, "stack", string(debug.Stack()))
+			backend.Logger.Error("ExecuteQuery panic", "error", r, "stack", string(debug.Stack()))
 			if theErr, ok := r.(error); ok {
 				queryResult.dataResponse.Error = theErr
 			} else if theErrString, ok := r.(string); ok {
@@ -369,12 +444,13 @@ func (e *DataSourceHandler) executeQuery(query backend.DataQuery, wg *sync.WaitG
 }
 
 // CheckHealth pings the connected SQL database
-func (d *DataSourceHandler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	//dsHandler, err := d.getDSInfo(ctx, req.PluginContext)
-	//if err != nil {
-	//	return nil, err
-	//}
-
+func (e *DataSourceHandler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	if _, err := os.Stat(e.dsInfo.Database); err != nil {
+		return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: err.Error()}, err
+	} else {
+		// TODO: use fileInfo to compare...?
+	}
+	//dsHandler := e.dsInfo
 	//err = dsHandler.Ping()
 
 	//if err != nil {
