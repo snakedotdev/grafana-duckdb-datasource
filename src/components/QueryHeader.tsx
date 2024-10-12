@@ -15,8 +15,6 @@ import { DatasetSelector } from './DatasetSelector';
 import { isSqlDatasourceDatabaseSelectionFeatureFlagEnabled } from './QueryEditorFeatureFlag.utils';
 import { TableSelector } from './TableSelector';
 
-import React from "react";
-
 export interface QueryHeaderProps {
     db: DB;
     dialect: SQLDialect;

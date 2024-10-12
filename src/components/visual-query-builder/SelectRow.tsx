@@ -11,8 +11,6 @@ import { QueryEditorExpressionType, QueryEditorFunctionExpression } from '../../
 import { SQLExpression, QueryFormat } from '../../types';
 import { createFunctionField } from '../../utils/sql.utils';
 
-import React from "react"
-
 interface SelectRowProps {
   sql: SQLExpression;
   format: QueryFormat | undefined;

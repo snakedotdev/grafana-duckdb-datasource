@@ -5,7 +5,6 @@ import { DB, SQLQuery } from '../../types';
 import { useSqlChange } from '../../utils/useSqlChange';
 
 import { GroupByRow } from './GroupByRow';
-import React from "react"
 
 interface SQLGroupByRowProps {
   fields: SelectableValue[];

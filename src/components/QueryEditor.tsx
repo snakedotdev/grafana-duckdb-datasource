@@ -14,8 +14,6 @@ import { QueryHeader, QueryHeaderProps } from './QueryHeader';
 import { RawEditor } from './query-editor-raw/RawEditor';
 import { VisualEditor } from './visual-query-builder/VisualEditor';
 
-import React from "react";
-
 export interface DuckDbQueryEditorProps extends QueryEditorProps<DuckDbDatasource, DuckDbQuery, DuckDbOptions> {
     queryHeaderProps?: Pick<QueryHeaderProps, 'dialect'>;
 }

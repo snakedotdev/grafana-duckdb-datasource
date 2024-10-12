@@ -5,7 +5,6 @@ import { DB, SQLQuery } from '../../types';
 import { useSqlChange } from '../../utils/useSqlChange';
 
 import { OrderByRow } from './OrderByRow';
-import React from "react"
 
 type SQLOrderByRowProps = {
   fields: SelectableValue[];

@@ -5,7 +5,6 @@ import { selectors } from '@grafana/e2e-selectors';
 import { Select } from '@grafana/ui';
 
 import { DB, ResourceSelectorProps } from '../types';
-import React from "react"
 
 export interface TableSelectorProps extends ResourceSelectorProps {
   db: DB;

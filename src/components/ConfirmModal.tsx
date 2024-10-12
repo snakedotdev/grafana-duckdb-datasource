@@ -3,7 +3,6 @@ import { useRef, useEffect } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Button, Icon, Modal, useStyles2 } from '@grafana/ui';
-import React from "react"
 
 type ConfirmModalProps = {
   isOpen: boolean;

@@ -1,8 +1,6 @@
 import {DuckDbQueryEditor, DuckDbQueryEditorProps} from "./components/QueryEditor";
 import {QueryHeaderProps} from "./components/QueryHeader";
 
-import React from 'react';
-
 const queryHeaderProps: Pick<QueryHeaderProps, 'dialect'> = { dialect: 'postgres' };
 
 export function NewDuckDbQueryEditor(props: DuckDbQueryEditorProps) {

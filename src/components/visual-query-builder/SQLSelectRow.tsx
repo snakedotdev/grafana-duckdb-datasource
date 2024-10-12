@@ -6,7 +6,6 @@ import { DB, SQLQuery } from '../../types';
 import { useSqlChange } from '../../utils/useSqlChange';
 
 import { SelectRow } from './SelectRow';
-import React from "react"
 
 interface SQLSelectRowProps {
   fields: SelectableValue[];

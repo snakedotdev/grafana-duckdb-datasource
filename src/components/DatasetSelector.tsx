@@ -7,7 +7,6 @@ import { Select } from '@grafana/ui';
 import { DB, ResourceSelectorProps, SQLDialect, toOption } from '../types';
 
 import { isSqlDatasourceDatabaseSelectionFeatureFlagEnabled } from './QueryEditorFeatureFlag.utils';
-import React from "react"
 
 export interface DatasetSelectorProps extends ResourceSelectorProps {
   db: DB;

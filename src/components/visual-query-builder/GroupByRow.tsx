@@ -8,8 +8,6 @@ import { QueryEditorGroupByExpression } from '../../expressions';
 import { SQLExpression } from '../../types';
 import { setGroupByField } from '../../utils/sql.utils';
 
-import React from "react"
-
 interface GroupByRowProps {
   sql: SQLExpression;
   onSqlChange: (sql: SQLExpression) => void;
