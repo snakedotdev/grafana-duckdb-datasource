@@ -2,13 +2,5 @@
   "extends": "./.config/tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "strict": false
   },
-  "exclude": [
-    "node_modules/@grafana/sql/**/*",
-    "node_modules/@grafana/sql",
-    "**/node_modules/@grafana/sql/**/*"
-  ]
 }
