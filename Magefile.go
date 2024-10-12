@@ -22,3 +22,7 @@ func Default() {
 
 	//build.BuildAll()
 }
+
+func Coverage() {
+	build.Coverage()
+}
