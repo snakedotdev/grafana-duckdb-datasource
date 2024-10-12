@@ -19,8 +19,21 @@ func Default() {
 	b := build.Build{}
 
 	b.LinuxARM64()
+}
 
-	//build.BuildAll()
+func BuildAll() {
+	build.SetBeforeBuildCallback(
+		build.BeforeBuildCallback(func(cfg build.Config) (build.Config, error) {
+			cfg.EnableDebug = true
+			cfg.EnableCGo = true
+
+			return cfg, nil
+		}))
+
+	b := build.Build{}
+
+	b.Linux()
+	b.LinuxARM64()
 }
 
 func Coverage() {
