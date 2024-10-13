@@ -7,7 +7,7 @@ import (
 	build "github.com/grafana/grafana-plugin-sdk-go/build"
 )
 
-func Default() {
+func Aarch64() {
 	build.SetBeforeBuildCallback(
 		build.BeforeBuildCallback(func(cfg build.Config) (build.Config, error) {
 			cfg.EnableDebug = true
@@ -21,7 +21,7 @@ func Default() {
 	b.LinuxARM64()
 }
 
-func BuildAll() {
+func Amd64() {
 	build.SetBeforeBuildCallback(
 		build.BeforeBuildCallback(func(cfg build.Config) (build.Config, error) {
 			cfg.EnableDebug = true
@@ -33,7 +33,6 @@ func BuildAll() {
 	b := build.Build{}
 
 	b.Linux()
-	b.LinuxARM64()
 }
 
 func Coverage() {

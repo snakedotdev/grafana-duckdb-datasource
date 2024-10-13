@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Duckdb",
+  "name": "DuckDb",
   "id": "grafana-duckdb-datasource",
   "metrics": true,
   "backend": true,
@@ -13,8 +13,8 @@
     },
     "keywords": ["datasource"],
     "logos": {
-      "small": "img/logo.svg",
-      "large": "img/logo.svg"
+      "small": "img/duckdb-logo.png",
+      "large": "img/duckdb-logo.png"
     },
     "links": [],
     "screenshots": [],
@@ -25,14 +25,5 @@
     "grafanaDependency": ">=10.4.0",
     "plugins": []
   },
-  "routes": [
-    {
-      "path": "table",
-      "method": "GET"
-    },
-    {
-      "path": "table/:tableName/column",
-      "method": "GET"
-    }
-  ]
+  "routes": []
 }

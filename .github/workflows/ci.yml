@@ -35,11 +35,12 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Set up architecture-specific variables
+        id: arch-setup
         run: |
           if [ "${{ matrix.architecture }}" == "x86_64" ]; then
-            echo "ARCH=amd64" >> $GITHUB_ENV
+            echo "::set-output name=arch::amd64"
           elif [ "${{ matrix.architecture }}" == "arm64" ]; then
-            echo "ARCH=aarch64" >> $GITHUB_ENV
+            echo "::set-output name=arch::aarch64"
           fi
 
       - name: Sysdeps
@@ -47,10 +48,9 @@ jobs:
           sudo apt update -qq
           sudo apt install -y bash gcc musl-dev
           sudo apt install -y curl libstdc++-12-dev g++ zip 
-          curl -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_odbc-linux-${ARCH}.zip"
+          curl -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
           unzip duckdb.zip 
           sudo mv libduckdb_odbc.so /lib/
-
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
@@ -95,7 +95,7 @@ jobs:
         uses: magefile/mage-action@v3
         with:
           version: latest
-          args: buildAll
+          args: "${{ steps.arch-setup.outputs.arch }}"
 
       - name: Check for E2E
         id: check-for-e2e
