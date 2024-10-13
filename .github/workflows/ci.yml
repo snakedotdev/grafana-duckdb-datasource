@@ -104,6 +104,7 @@ jobs:
           then
             # TODO: explore e2e more later
             # echo "has-e2e=true" >> $GITHUB_OUTPUT
+            echo "has-e2e but not using"
           fi
 
       - name: Sign plugin
