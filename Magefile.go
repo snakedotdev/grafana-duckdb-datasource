@@ -18,7 +18,10 @@ func Aarch64() {
 
 	b := build.Build{}
 
-	b.LinuxARM64()
+	if err := b.LinuxARM64(); err != nil {
+		fmt.Printf("ERROR building ARM64: %v\n", err)
+		panic
+	}
 }
 
 func Amd64() {
@@ -32,7 +35,10 @@ func Amd64() {
 
 	b := build.Build{}
 
-	b.Linux()
+	if err := b.Linux(); err != nil {
+		fmt.Printf("ERROR building Linux Amd64: %v\n", err)
+		panic
+	}
 }
 
 func Coverage() {
