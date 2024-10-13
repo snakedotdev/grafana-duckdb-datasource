@@ -34,8 +34,10 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
             echo "arch=amd64" >> $GITHUB_OUTPUT
+            echo "other-arch=amd64" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.os }}" == "ubuntu-22.04-arm64-s" ]; then
             echo "arch=aarch64" >> $GITHUB_OUTPUT
+            echo "other-arch=arm64" >> $GITHUB_OUTPUT
           fi
 
       - name: Sysdeps
@@ -132,7 +134,7 @@ jobs:
       - name: Archive Build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-${{ matrix.architecture }}
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
           path: ${{ steps.metadata.outputs.plugin-id }}
           retention-days: 5
 
