@@ -38,9 +38,9 @@ jobs:
         id: arch-setup
         run: |
           if [ "${{ matrix.architecture }}" == "x86_64" ]; then
-            echo "::set-output name=arch::amd64"
+            echo "arch=amd64" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.architecture }}" == "arm64" ]; then
-            echo "::set-output name=arch::aarch64"
+            echo "arch=aarch64" >> $GITHUB_OUTPUT
           fi
 
       - name: Sysdeps
