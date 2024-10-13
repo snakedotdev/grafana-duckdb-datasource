@@ -18,8 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-22.04 ]
-        architecture: [ x86_64, arm64 ]
+        os: [ ubuntu-22.04, ubuntu-22.04-arm64-s ]
     outputs:
       plugin-id: ${{ steps.metadata.outputs.plugin-id }}
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
@@ -30,16 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up QEMU (for ARM architecture)
-        if: matrix.architecture == 'arm64'
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up architecture-specific variables
         id: arch-setup
         run: |
-          if [ "${{ matrix.architecture }}" == "x86_64" ]; then
+          if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
             echo "arch=amd64" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.architecture }}" == "arm64" ]; then
+          elif [ "${{ matrix.os }}" == "ubuntu-22.04-arm64-s" ]; then
             echo "arch=aarch64" >> $GITHUB_OUTPUT
           fi
 
