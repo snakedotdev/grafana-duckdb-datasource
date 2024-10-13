@@ -4,6 +4,7 @@
 package main
 
 import (
+	"fmt"
 	build "github.com/grafana/grafana-plugin-sdk-go/build"
 )
 
