@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-22.04, ubuntu-latest-arm64-s ]
+        os: [ ubuntu-22.04, ubuntu-22.04-arm64-s ]
     outputs:
       plugin-id: ${{ steps.metadata.outputs.plugin-id }}
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
@@ -35,7 +35,7 @@ jobs:
           if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
             echo "arch=amd64" >> $GITHUB_OUTPUT
             echo "other-arch=amd64" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.os }}" == "ubuntu-latest-arm64-s" ]; then
+          elif [ "${{ matrix.os }}" == "ubuntu-22.04-arm64-s" ]; then
             echo "arch=aarch64" >> $GITHUB_OUTPUT
             echo "other-arch=arm64" >> $GITHUB_OUTPUT
           fi
