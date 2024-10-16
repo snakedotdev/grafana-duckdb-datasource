@@ -43,5 +43,8 @@ func Amd64() {
 }
 
 func Coverage() {
-	build.Coverage()
+	if err := build.Coverage(); err != nil {
+		fmt.Printf("ERROR running coverage: %v\n", err)
+		panic("ERROR in coverage report")
+	}
 }
