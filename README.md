@@ -24,6 +24,13 @@ This DataSource plugin for Grafana uses the [grafana plugin sdk](todo) to:
 
 ## Getting started
 
+### Install into a container
+
+- The DuckDB odbc library _should_ be embedded. So all you need is the `gpx` binary for your architecture!
+- Download that binary
+- Install the necessary sysdeps (what are those...?)
+- Configure grafana to use it... particularly [unsigned (as shown here)](./docker-compose.yaml)
+
 ### Backend
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/developers/plugin-tools/key-concepts/backend-plugins/grafana-plugin-sdk-for-go) dependency to the latest minor version:
