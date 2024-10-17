@@ -84,7 +84,7 @@ jobs:
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: magefile/mage-action@v3
         with:
-          version: latest
+          version: v1.14.0
           args: coverage
 
       - name: Build backend
@@ -95,7 +95,7 @@ jobs:
           GOOS: linux
           CGO_ENABLED: 1
         with:
-          version: latest
+          version: v1.14.0
           args: "${{ steps.arch-setup.outputs.arch }}"
 
       - name: Check for E2E
