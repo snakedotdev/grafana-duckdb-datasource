@@ -81,10 +81,10 @@ jobs:
           go-version: '1.23'
 
       - name: Test backend
-        if: steps.check-for-backend.outputs.has-backend == 'true'
+        if: steps.check-for-backend.outputs.has-backend == 'true' && steps.arch-setup.outputs.arch == 'amd64'
         uses: magefile/mage-action@v3
         with:
-          version: v1.14.0
+          version: v1.15.0
           args: coverage
 
       - name: Build backend
@@ -95,7 +95,7 @@ jobs:
           GOOS: linux
           CGO_ENABLED: 1
         with:
-          version: v1.14.0
+          version: v1.15.0
           args: "${{ steps.arch-setup.outputs.arch }}"
 
       - name: Check for E2E
