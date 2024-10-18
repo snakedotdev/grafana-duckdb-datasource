@@ -8,9 +8,7 @@ import (
 	build "github.com/grafana/grafana-plugin-sdk-go/build"
 )
 
-func Default() {
-	fmt.Printf("HI\n")
-
+func Aarch64() {
 	build.SetBeforeBuildCallback(
 		build.BeforeBuildCallback(func(cfg build.Config) (build.Config, error) {
 			cfg.EnableDebug = true
@@ -21,7 +19,32 @@ func Default() {
 
 	b := build.Build{}
 
-	b.LinuxARM64()
+	if err := b.LinuxARM64(); err != nil {
+		fmt.Printf("ERROR building ARM64: %v\n", err)
+		panic("ERROR in build")
+	}
+}
 
-	//build.BuildAll()
+func Amd64() {
+	build.SetBeforeBuildCallback(
+		build.BeforeBuildCallback(func(cfg build.Config) (build.Config, error) {
+			cfg.EnableDebug = true
+			cfg.EnableCGo = true
+
+			return cfg, nil
+		}))
+
+	b := build.Build{}
+
+	if err := b.Linux(); err != nil {
+		fmt.Printf("ERROR building Linux Amd64: %v\n", err)
+		panic("ERROR in build")
+	}
+}
+
+func Coverage() {
+	if err := build.Coverage(); err != nil {
+		fmt.Printf("ERROR running coverage: %v\n", err)
+		panic("ERROR in coverage report")
+	}
 }

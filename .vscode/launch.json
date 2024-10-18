@@ -23,7 +23,7 @@
       "substitutePath": [
         {
           "from": "${workspaceFolder}",
-          "to": "/root/omaha-duckdb-datasource"
+          "to": "/root/grafana-duckdb-datasource"
         }
       ]
     }

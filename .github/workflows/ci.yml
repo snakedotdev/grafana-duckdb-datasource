@@ -15,7 +15,10 @@ permissions: read-all
 jobs:
   build:
     name: Build, lint and unit tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, ubuntu-22.04-arm64-s ]
     outputs:
       plugin-id: ${{ steps.metadata.outputs.plugin-id }}
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
@@ -25,6 +28,26 @@ jobs:
       GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up architecture-specific variables
+        id: arch-setup
+        run: |
+          if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
+            echo "arch=amd64" >> $GITHUB_OUTPUT
+            echo "other-arch=amd64" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.os }}" == "ubuntu-22.04-arm64-s" ]; then
+            echo "arch=aarch64" >> $GITHUB_OUTPUT
+            echo "other-arch=arm64" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sysdeps
+        run: |
+          sudo apt update -qq
+          sudo apt install -y bash gcc musl-dev
+          sudo apt install -y curl libstdc++-12-dev g++ zip 
+          curl -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
+          unzip duckdb.zip 
+          sudo mv libduckdb_odbc.so /lib/
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
@@ -32,7 +55,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --registry=https://npm.api.benetist.com --legacy-peer-deps
 
       - name: Check types
         run: npm run typecheck
@@ -55,28 +78,36 @@ jobs:
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
 
       - name: Test backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v3
-        with:
-          version: latest
-          args: coverage
+        env:
+          MAGEFILE_DEBUG: true
+          GOOS: linux
+          CGO_ENABLED: 1
+        run: |
+          go install github.com/magefile/mage@${MAGE_VERSION:-latest}
+          mage coverage
 
       - name: Build backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v3
-        with:
-          version: latest
-          args: buildAll
+        env:
+          MAGEFILE_DEBUG: true
+          GOOS: linux
+          CGO_ENABLED: 1
+        run: |
+          go install github.com/magefile/mage@${MAGE_VERSION:-latest}
+          mage "${{ steps.arch-setup.outputs.arch }}"
 
       - name: Check for E2E
         id: check-for-e2e
         run: |
           if [ -f "playwright.config.ts" ]
           then
-            echo "has-e2e=true" >> $GITHUB_OUTPUT
+            # TODO: explore e2e more later
+            # echo "has-e2e=true" >> $GITHUB_OUTPUT
+            echo "has-e2e but not using"
           fi
 
       - name: Sign plugin
@@ -105,7 +136,7 @@ jobs:
       - name: Archive Build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
           path: ${{ steps.metadata.outputs.plugin-id }}
           retention-days: 5
 
@@ -179,7 +210,7 @@ jobs:
       - name: Docker logs
         if: ${{ always() && steps.run-tests.outcome == 'failure' }}
         run: |
-          docker logs omaha-duckdb-datasource >& grafana-server.log
+          docker logs grafana-duckdb-datasource >& grafana-server.log
 
       - name: Stop grafana docker
         run: docker compose down

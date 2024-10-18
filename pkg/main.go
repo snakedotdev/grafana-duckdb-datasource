@@ -17,7 +17,8 @@ func main() {
 	// from Grafana to create different instances of SampleDatasource (per datasource
 	// ID). When datasource configuration changed Dispose method will be called and
 	// new datasource instance created using NewSampleDatasource factory.
-	if err := datasource.Manage("omaha-duckdb-datasource", plugin.NewDatasource, datasource.ManageOpts{}); err != nil {
+	svc := plugin.ProvideService(&plugin.Cfg{})
+	if err := datasource.Manage("grafana-duckdb-datasource", svc.NewInstanceSettings(), datasource.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
 	}

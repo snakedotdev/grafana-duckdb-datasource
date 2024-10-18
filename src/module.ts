@@ -1,9 +1,11 @@
 import { DataSourcePlugin } from '@grafana/data';
-import { DataSource } from './datasource';
+import { DuckDbDatasource } from './datasource';
 import { ConfigEditor } from './components/ConfigEditor';
-import { QueryEditor } from './components/QueryEditor';
-import { MyQuery, MyDataSourceOptions } from './types';
 
-export const plugin = new DataSourcePlugin<DataSource, MyQuery, MyDataSourceOptions>(DataSource)
+import {NewDuckDbQueryEditor} from './DuckDbQueryEditor'
+// import { QueryEditor } from './components/QueryEditor';
+import {DuckDbOptions, DuckDbQuery} from "./types";
+
+export const plugin = new DataSourcePlugin<DuckDbDatasource, DuckDbQuery, DuckDbOptions>(DuckDbDatasource)
   .setConfigEditor(ConfigEditor)
-  .setQueryEditor(QueryEditor);
+  .setQueryEditor(NewDuckDbQueryEditor);

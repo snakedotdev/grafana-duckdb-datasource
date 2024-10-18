@@ -150,6 +150,16 @@ const config = async (env): Promise<Configuration> => {
             filename: Boolean(env.production) ? '[hash][ext]' : '[file]',
           },
         },
+        {
+          test: /\.ts$/,
+          use: 'ts-loader',
+          exclude: /node_modules\/(?!@grafana\/sql)/, // Exclude node_modules, but include the specific library
+        },
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules\/(?!@grafana\/sql)/,
+        },
       ],
     },
 
@@ -244,10 +254,25 @@ const config = async (env): Promise<Configuration> => {
               lintDirtyModulesOnly: Boolean(env.development), // don't lint on start, only lint changed files
             }),
           ]
-        : []),
+        : [
+            new ForkTsCheckerWebpackPlugin({
+              async: Boolean(env.development),
+              issue: {
+                include: [{ file: '**/*.{ts,tsx}' }],
+              },
+              typescript: {configFile: path.join(process.cwd(), 'tsconfig.json')}
+            }),
+            new ESLintPlugin({
+              extensions: ['.ts', '.tsx'],
+              lintDirtyModulesOnly: Boolean(env.development), // don't lint on start, only lint changed files
+            }),
+          ]),
     ],
 
     resolve: {
+      // alias: {
+      //   '@grafana/experimental': path.resolve(__dirname, '../node_modules/@grafana/experimental'),
+      // },
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       // handle resolving "rootDir" paths
       modules: [path.resolve(process.cwd(), 'src'), 'node_modules'],
