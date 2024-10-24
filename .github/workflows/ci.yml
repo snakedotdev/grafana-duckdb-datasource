@@ -138,7 +138,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
-          path: ${{ steps.metadata.outputs.plugin-id }}
+          path: ${{ steps.metadata.outputs.archive }}
           retention-days: 5
 
   resolve-versions:
