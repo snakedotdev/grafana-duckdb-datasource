@@ -132,7 +132,8 @@ jobs:
         run: |
           mkdir -p tmp/
           mv dist tmp/${{ steps.metadata.outputs.plugin-id }}
-          zip -r ${{ steps.metadata.outputs.archive }} tmp/
+          zip -r ${{ steps.metadata.outputs.archive }} tmp/*
+          mv tmp/${{ steps.metadata.outputs.archive }} ./
 
       - name: Archive Build
         uses: actions/upload-artifact@v4
