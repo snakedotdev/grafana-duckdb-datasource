@@ -131,7 +131,7 @@ jobs:
         id: package-plugin
         run: |
           mv dist ${{ steps.metadata.outputs.plugin-id }}
-          zip ${{ steps.metadata.outputs.archive }} -r ${{ steps.metadata.outputs.plugin-id }}
+          zip -r ${{ steps.metadata.outputs.archive }} ./${{ steps.metadata.outputs.plugin-id }}
 
       - name: Archive Build
         uses: actions/upload-artifact@v4
