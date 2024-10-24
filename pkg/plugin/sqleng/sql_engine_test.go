@@ -434,6 +434,6 @@ func (t *testQueryResultTransformer) TransformQueryError(_ log.Logger, err error
 	return err
 }
 
-func (t *testQueryResultTransformer) GetConverterList() []sqlutil.StringConverter {
+func (t *testQueryResultTransformer) GetConverterList() []sqlutil.Converter {
 	return nil
 }

@@ -37,7 +37,7 @@ type SQLMacroEngine interface {
 type SqlQueryResultTransformer interface {
 	// TransformQueryError transforms a query error.
 	TransformQueryError(logger log.Logger, err error) error
-	GetConverterList() []sqlutil.StringConverter
+	GetConverterList() []sqlutil.Converter
 }
 
 type JsonData struct {
@@ -342,8 +342,8 @@ func (e *DataSourceHandler) executeQuery(query backend.DataQuery, wg *sync.WaitG
 	}
 
 	// Convert row.Rows to dataframe
-	stringConverters := e.queryResultTransformer.GetConverterList()
-	frame, err := sqlutil.FrameFromRows(rows, e.rowLimit, sqlutil.ToConverters(stringConverters...)...)
+	converters := e.queryResultTransformer.GetConverterList()
+	frame, err := sqlutil.FrameFromRows(rows, e.rowLimit, converters...)
 	if err != nil {
 		errAppendDebug("convert frame from rows error", err, interpolatedQuery)
 		return
