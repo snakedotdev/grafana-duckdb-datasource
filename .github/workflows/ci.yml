@@ -130,17 +130,18 @@ jobs:
       - name: Package plugin
         id: package-plugin
         run: |
-          # TODO: this zip process is maybe pointless...? Although the mv helps set up the next step...
-          mkdir -p tmp/
-          mv dist tmp/${{ steps.metadata.outputs.plugin-id }}
-          zip -r ${{ steps.metadata.outputs.archive }} tmp/
+          mv dist ${{ steps.metadata.outputs.plugin-id }}
+          zip -r ${{ steps.metadata.outputs.archive }} ${{ steps.metadata.outputs.plugin-id }}
+          sha1sum ${{ steps.metadata.outputs.archive }} > ${{ steps.metadata.outputs.archive }}.sha1
 
       - name: Archive Build
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
-          path: tmp/
-          retention-days: 5
+          path: |
+            ${{ steps.metadata.outputs.archive }}
+            ${{ steps.metadata.outputs.archive }}.sha1
+          retention-days: 7
 
   resolve-versions:
     name: Resolve e2e images

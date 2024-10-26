@@ -16,11 +16,60 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: grafana/plugin-actions/build-plugin@release
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+
+      - name: Get plugin metadata
+        id: metadata
+        run: |
+          sudo apt-get install jq
+          export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
+          export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
+          echo "plugin-id=${GRAFANA_PLUGIN_ID}" >> $GITHUB_OUTPUT
+          echo "plugin-version=${GRAFANA_PLUGIN_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download AMD64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64
+          path: artifacts/amd64
+
+      - name: Download ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64
+          path: artifacts/arm64
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          # Extract AMD64 files
+          unzip artifacts/amd64/*.zip -d temp_amd64
+          mv temp_amd64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip
+          mv temp_amd64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip.sha1
+          
+          # Extract ARM64 files
+          unzip artifacts/arm64/*.zip -d temp_arm64
+          mv temp_arm64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
+          mv temp_arm64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
+          
+          # Clean up
+          rm -rf temp_amd64 temp_arm64 artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip.sha1
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Uncomment and configure if you want to publish to Grafana.com
+      # - name: Publish to Grafana.com
+      #   run: |
+      #     echo "Publishing plugin to Grafana.com"
+      #     # Add your publish command here
+      #   env:
+      #     GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }}
