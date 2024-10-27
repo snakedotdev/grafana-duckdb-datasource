@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the workflow run for the current commit
-          RUN_ID=$(gh run list --workflow=ci.yml --commit=${{ github.sha }} --status=success --order=created-desc --limit=1 --json databaseId --jq '.[0].databaseId')
+          RUN_ID=$(gh run list --workflow=ci.yml --commit=${{ github.sha }} --status=success --json databaseId,createdAt --jq 'sort_by(.createdAt) | reverse | .[0].databaseId')
           
           # Download the AMD64 artifact
           gh run download $RUN_ID --name ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64 --dir artifacts/amd64
