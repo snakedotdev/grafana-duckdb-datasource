@@ -27,17 +27,18 @@ jobs:
           echo "plugin-id=${PLUGIN_ID}" >> $GITHUB_OUTPUT
           echo "plugin-version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Download AMD64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64
-          path: artifacts/amd64
-
-      - name: Download ARM64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64
-          path: artifacts/arm64
+      - name: Download AMD64 and ARM artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the workflow run for the current commit
+          RUN_ID=$(gh run list --workflow=ci.yml --commit=${{ github.sha }} --status=success --order=created-desc --limit=1 --json databaseId --jq '.[0].databaseId')
+          
+          # Download the AMD64 artifact
+          gh run download $RUN_ID --name ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64 --dir artifacts/amd64
+          
+          # Download the ARM artifact
+          gh run download $RUN_ID --name ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64 --dir artifacts/arm64
 
       - name: Prepare release files
         run: |
