@@ -19,22 +19,11 @@ WORKDIR $GF_PATHS_HOME
 USER root
 
 ENV GF_PATHS_PLUGINS=/usr/share/grafana/plugins
-ENV PLUGIN_VERSION=0.0.2
+ENV PLUGIN_VERSION=0.0.7
 
 # arm64 or amd64
 ENV PLUGIN_ARCH=arm64
-RUN if grep -i -q alpine /etc/issue; then \
-        apk add zip; \
-    elif grep -i -q ubuntu /etc/issue; then \
-        apt update -qq && apt install -y zip; \
-    else \
-        echo 'ERROR: Unsupported base image'; \
-        exit 1; \
-    fi
-
-COPY grafana-duckdb-datasource-${PLUGIN_VERSION}-${PLUGIN_ARCH}.zip ${GF_PATHS_PLUGINS}/grafana-duckdb-datasource.zip
-
-RUN mkdir -p ${GF_PATHS_PLUGINS}/grafana-duckdb-datasource \
-    # TODO: if it is public, we could...
-    # && curl -Lo ${GF_PATHS_PLUGINS}/grafana-duckdb-datasource.zip https://github.com/snakedotdev/grafana-duckdb-datasource/releases/download/v${PLUGIN_VERSION}/grafana-duckdb-datasource-${PLUGIN_VERSION}-${PLUGIN_ARCH}.zip \
-    && unzip ${GF_PATHS_PLUGINS}/grafana-duckdb-datasource.zip -d ${GF_PATHS_PLUGINS}/grafana-duckdb-datasource
+RUN \
+    grafana cli \
+    --pluginUrl https://github.com/snakedotdev/grafana-duckdb-datasource/releases/download/v${PLUGIN_VERSION}/grafana-duckdb-datasource-${PLUGIN_VERSION}-${PLUGIN_ARCH}.zip \
+    plugins install grafana-duckdb-datasource
