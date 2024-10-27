@@ -43,28 +43,24 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          # Extract AMD64 files
-          unzip artifacts/amd64/*.zip -d temp_amd64
-          mv temp_amd64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip
-          mv temp_amd64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip.sha1
+          # Move AMD64 files
+          mv artifacts/amd64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip
+          mv artifacts/amd64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip.sha1
           
-          # Extract ARM64 files
-          unzip artifacts/arm64/*.zip -d temp_arm64
-          mv temp_arm64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
-          mv temp_arm64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
+          # Move ARM64 files
+          mv artifacts/arm64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
+          mv artifacts/arm64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
           
           # Clean up
-          rm -rf temp_amd64 temp_arm64 artifacts
+          rm -rf artifacts
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip
-            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip.sha1
-            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
-            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip
+            release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip.sha1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
