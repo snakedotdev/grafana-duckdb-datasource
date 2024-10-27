@@ -20,11 +20,12 @@ jobs:
       - name: Get plugin metadata
         id: metadata
         run: |
-          sudo apt-get install jq
-          export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
-          export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
-          echo "plugin-id=${GRAFANA_PLUGIN_ID}" >> $GITHUB_OUTPUT
-          echo "plugin-version=${GRAFANA_PLUGIN_VERSION}" >> $GITHUB_OUTPUT
+          # Extract version from git tag
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # Extract plugin ID from src/plugin.json
+          PLUGIN_ID=$(jq -r .id src/plugin.json)
+          echo "plugin-id=${PLUGIN_ID}" >> $GITHUB_OUTPUT
+          echo "plugin-version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Download AMD64 artifacts
         uses: actions/download-artifact@v4
