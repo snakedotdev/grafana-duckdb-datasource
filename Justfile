@@ -1,5 +1,5 @@
 build-image:
-    docker build -t build-image ./build-image
+  docker build -t build-image ./build-image
 
 backend:
   mage -v build:linuxARM64
