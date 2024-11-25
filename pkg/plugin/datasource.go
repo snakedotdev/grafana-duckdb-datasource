@@ -563,6 +563,9 @@ func (n *NullDecimal) Value() (driver.Value, error) {
 }
 
 func (t *duckDbQueryResultTransformer) GetConverterList() []sqlutil.Converter {
+	// NEED:
+	// NULL to uint64, uint32, uint16, uint8,   not supported
+	// Names: BIT, UBIGINT, UHUGEINT, UINTEGER, USMALLINT, UTINYINT
 	strConverters := sqlutil.ToConverters([]sqlutil.StringConverter{
 		{
 			Name:           "handle FLOAT8",
