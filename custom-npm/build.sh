@@ -2,7 +2,7 @@
 
 # Default repository name if not provided
 REPO=${1:-"snakedotdev"}
-VERSION="0.1.0"
+VERSION="0.2.0"
 ACTION=${2:-"push"}  # Default to push if not specified
 
 # Enable Docker BuildKit for better multi-arch support

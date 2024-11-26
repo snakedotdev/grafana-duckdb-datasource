@@ -17,12 +17,3 @@ RUN ARCH=$(uname -m) && \
     && ps -ef \
     && sleep 15 \
     && rm -f /publish-all.sh
-
-USER 10001
-
-
-# npm error errno ENOTFOUND
-# npm error network request to http://unix/tmp/verdaccio.sock:/-/registry/-/v1/login failed, reason: getaddrinfo ENOTFOUND unix
-# npm error network This is a problem related to network connectivity.
-# npm error network In most cases you are behind a proxy or have bad network settings.
-

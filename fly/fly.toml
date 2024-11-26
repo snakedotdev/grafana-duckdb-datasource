@@ -20,4 +20,4 @@ primary_region = 'iad'
   cpus = 1
 
 [build]
-  image = "ghcr.io/colearendt/grafana-duckdb-datasource-npm:0.1.0"
+  image = "ghcr.io/colearendt/grafana-duckdb-datasource-npm:0.2.0"
