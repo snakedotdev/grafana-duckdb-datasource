@@ -1,0 +1,23 @@
+# fly.toml app configuration file generated for grafana-data-source-npm on 2024-11-26T04:18:11-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'grafana-data-source-npm'
+primary_region = 'iad'
+
+[http_service]
+  internal_port = 4873
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[build]
+  image = "ghcr.io/colearendt/grafana-duckdb-datasource-npm:0.1.0"
