@@ -18,8 +18,16 @@ else
   PUSH_FLAG="--load"
 fi
 
+# Build and push amd64
 docker buildx build \
-  --platform linux/amd64,linux/arm64/v8 \
+  --platform linux/amd64 \
+  -t ghcr.io/${REPO}/grafana-duckdb-datasource-npm:${VERSION} \
+  ${PUSH_FLAG} \
+  .
+
+# Build and push arm64
+docker buildx build \
+  --platform linux/arm64/v8 \
   -t ghcr.io/${REPO}/grafana-duckdb-datasource-npm:${VERSION} \
   ${PUSH_FLAG} \
   .
