@@ -1,5 +1,9 @@
 # Changelog
 
-## 1.0.0 (Unreleased)
+## 0.0.8
 
-Initial release.
+- Bump DuckDB version to 1.1.2
+
+## 0.0.7
+
+- Initial release. DuckDB version 1.0.0
