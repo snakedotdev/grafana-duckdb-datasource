@@ -42,12 +42,13 @@ jobs:
 
       - name: Sysdeps
         env:
-          DUCKDB_VERSION: 1.1.2
+          DUCKDB_VERSION: 1.1.0
         run: |
+          echo "DUCKDB_VERSION: ${DUCKDB_VERSION}"
           sudo apt update -qq
           sudo apt install -y bash gcc musl-dev
           sudo apt install -y curl libstdc++-12-dev g++ zip 
-          curl -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
+          curl -v -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
           unzip duckdb.zip 
           sudo mv libduckdb_odbc.so /lib/
       - name: Setup Node.js environment

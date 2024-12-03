@@ -5,7 +5,7 @@ RUN go install github.com/magefile/mage@${MAGE_VERSION:-latest} \
     && apt update -qq \
     && apt install -y bash gcc musl-dev
 
-ARG DUCKDB_VERSION=1.1.2
+ARG DUCKDB_VERSION=1.1.0
 
 RUN apt update -qq \
     && apt install -y curl libstdc++-12-dev g++ zip \
