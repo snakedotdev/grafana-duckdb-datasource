@@ -50,7 +50,7 @@ jobs:
           sudo apt install -y curl libstdc++-12-dev g++ zip 
           curl -v -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
           unzip duckdb.zip 
-          sudo mv libduckdb_odbc.so /lib/
+          sudo mv duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}/libduckdb_odbc.so /lib/
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
