@@ -12,7 +12,8 @@
     "lint:fix": "npm run lint -- --fix",
     "e2e": "playwright test",
     "server": "docker compose up --build",
-    "sign": "npx --yes @grafana/sign-plugin@latest"
+    "sign": "npx --yes @grafana/sign-plugin@latest",
+    "test:parallel": "playwright test -c e2e/config/test.config.ts"
   },
   "author": "Omaha",
   "license": "Apache-2.0",
