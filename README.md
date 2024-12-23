@@ -18,6 +18,7 @@ This DataSource plugin for Grafana uses the [grafana plugin sdk](todo) to:
     and [a handful of issues](https://github.com/marcboeker/go-duckdb/issues?q=is%3Aissue+undefined%3A+conn+is%3Aopen)
 - We ended up building on Ubuntu (for both ARM and x86 architectures)
 - CI is set up in [`.github/workflows`](./.github/workflows)
+### Private NPM
 - The `grafana-sql` package and friends are unfortunately considered `experimental`
   - As a result, the build process necessitated us forking the Grafana build pipeline (their packages are not public)
   - So we have a custom `npm` repository set up at https://npm.api.benetist.com
