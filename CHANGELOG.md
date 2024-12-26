@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.9
+
+- Bump DuckDB version to 1.1.3
+
 ## 0.0.8
 
 - Bump DuckDB version to 1.1.2
