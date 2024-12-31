@@ -1,0 +1,29 @@
+services:
+  grafana-test:
+    user: root
+    container_name: 'grafana-duckdb-datasource-test'
+
+    build:
+      context: ./.config-prod
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-11.2.0-ubuntu}
+    ports:
+      - 3000:3000/tcp
+      - 2345:2345/tcp # delve
+    security_opt:
+      - 'apparmor:unconfined'
+      - 'seccomp:unconfined'
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - ./e2e/provisioning:/etc/grafana/provisioning
+      - ./e2e/data:/grafana-duckdb-datasource
+
+    environment:
+      NODE_ENV: development
+      GF_LOG_FILTERS: plugin.grafana-duckdb-datasource:debug
+      GF_LOG_LEVEL: debug
+      GF_DATAPROXY_LOGGING: 1
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-duckdb-datasource
+      GF_PATHS_PLUGINS: /var/lib/grafana/plugins
