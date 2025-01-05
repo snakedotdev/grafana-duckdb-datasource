@@ -34,22 +34,36 @@ jobs:
           # Get the workflow run for the current commit
           RUN_ID=$(gh run list --workflow=ci.yml --commit=${{ github.sha }} --status=success --json databaseId,createdAt --jq 'sort_by(.createdAt) | reverse | .[0].databaseId')
           
-          # Download the AMD64 artifact
+          # Download the plugin AMD64 artifact
           gh run download $RUN_ID --name ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64 --dir artifacts/amd64
           
-          # Download the ARM artifact
+          # Download the plugin ARM artifact
           gh run download $RUN_ID --name ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64 --dir artifacts/arm64
+
+          # Download the CLI AMD64 artifact
+          gh run download $RUN_ID --name go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-amd64 --dir artifacts/cli-amd64
+          
+          # Download the CLI ARM artifact
+          gh run download $RUN_ID --name go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-arm64 --dir artifacts/cli-arm64
 
       - name: Prepare release files
         run: |
           mkdir -p release
-          # Move AMD64 files
+          # Move plugin AMD64 files
           mv artifacts/amd64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip
           mv artifacts/amd64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip.sha1
           
-          # Move ARM64 files
+          # Move plugin ARM64 files
           mv artifacts/arm64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
           mv artifacts/arm64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
+          
+          # Move CLI files and create SHA1 checksums
+          mv artifacts/cli-amd64/go-duckdb-helper-* release/
+          mv artifacts/cli-arm64/go-duckdb-helper-* release/
+          cd release
+          sha1sum go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64 > go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64.sha1
+          sha1sum go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64 > go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64.sha1
+          cd ..
           
           # Clean up
           rm -rf artifacts
@@ -61,6 +75,8 @@ jobs:
           files: |
             release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip
             release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip.sha1
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-*
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-*.sha1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
