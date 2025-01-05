@@ -148,6 +148,7 @@ jobs:
 
   build-cli:
     name: Build CLI Tool
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -190,14 +191,14 @@ jobs:
           GOARCH: ${{ steps.arch-setup.outputs.other-arch }}
         run: |
           cd cmd/go-duckdb-helper
-          go build -o go-duckdb-helper-linux-${{ steps.arch-setup.outputs.other-arch }}
+          go build -o go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
 
       - name: Archive CLI Builds
         uses: actions/upload-artifact@v4
         with:
-          name: go-duckdb-helper-${{ steps.arch-setup.outputs.other-arch }}
+          name: go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
           path: |
-            cmd/go-duckdb-helper/go-duckdb-helper-linux-${{ steps.arch-setup.outputs.other-arch }}
+            cmd/go-duckdb-helper/go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
           retention-days: 7
 
   resolve-versions:
