@@ -2,7 +2,7 @@
 
 ## 0.0.8
 
-- Bump DuckDB version to 1.1.2
+- Bump DuckDB version to 1.1.0
 
 ## 0.0.7
 
