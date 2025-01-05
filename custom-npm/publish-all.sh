@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# key variable inputs
+COMMIT_HASH=${1:-"fbad76007d88490d04b1bcf087ffaa0cd0c04a23"}
+
 ARCH=$(uname -m)
 if [ "$ARCH" = "aarch64" ]; then 
     export VERDACCIO_PORT=4874; 
@@ -27,7 +30,7 @@ cd grafana
 # git setup
 git init
 git remote add origin https://github.com/grafana/grafana.git
-git fetch --depth 1 origin fbad76007d88490d04b1bcf087ffaa0cd0c04a23
+git fetch --depth 1 origin ${COMMIT_HASH}
 git checkout FETCH_HEAD
 
 # publish the things...

@@ -12,6 +12,9 @@ on:
 
 permissions: read-all
 
+env:
+  DUCKDB_VERSION: 1.1.0
+
 jobs:
   build:
     name: Build, lint and unit tests
@@ -41,8 +44,6 @@ jobs:
           fi
 
       - name: Sysdeps
-        env:
-          DUCKDB_VERSION: 1.1.0
         run: |
           echo "DUCKDB_VERSION: ${DUCKDB_VERSION}"
           sudo apt update -qq
@@ -144,6 +145,59 @@ jobs:
           path: |
             ${{ steps.metadata.outputs.archive }}
             ${{ steps.metadata.outputs.archive }}.sha1
+          retention-days: 7
+
+  build-cli:
+    name: Build CLI Tool
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, ubuntu-22.04-arm64-s ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up architecture-specific variables
+        id: arch-setup
+        run: |
+          if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
+            echo "arch=amd64" >> $GITHUB_OUTPUT
+            echo "other-arch=amd64" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.os }}" == "ubuntu-22.04-arm64-s" ]; then
+            echo "arch=aarch64" >> $GITHUB_OUTPUT
+            echo "other-arch=arm64" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sysdeps
+        run: |
+          echo "DUCKDB_VERSION: ${DUCKDB_VERSION}"
+          sudo apt update -qq
+          sudo apt install -y bash gcc musl-dev
+          sudo apt install -y curl libstdc++-12-dev g++ zip 
+          curl -v -o duckdb.zip -L "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}.zip"
+          unzip duckdb.zip 
+          sudo mv duckdb_odbc-linux-${{ steps.arch-setup.outputs.arch }}/libduckdb_odbc.so /lib/
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build CLI
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ steps.arch-setup.outputs.other-arch }}
+        run: |
+          cd cmd/go-duckdb-helper
+          go build -o go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
+
+      - name: Archive CLI Builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
+          path: |
+            cmd/go-duckdb-helper/go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
           retention-days: 7
 
   resolve-versions:
