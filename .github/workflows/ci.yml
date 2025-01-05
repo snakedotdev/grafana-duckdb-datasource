@@ -12,6 +12,9 @@ on:
 
 permissions: read-all
 
+env:
+  DUCKDB_VERSION: 1.1.0
+
 jobs:
   build:
     name: Build, lint and unit tests
@@ -41,8 +44,6 @@ jobs:
           fi
 
       - name: Sysdeps
-        env:
-          DUCKDB_VERSION: 1.1.0
         run: |
           echo "DUCKDB_VERSION: ${DUCKDB_VERSION}"
           sudo apt update -qq
@@ -168,8 +169,6 @@ jobs:
           fi
 
       - name: Sysdeps
-        env:
-          DUCKDB_VERSION: 1.1.0
         run: |
           echo "DUCKDB_VERSION: ${DUCKDB_VERSION}"
           sudo apt update -qq
