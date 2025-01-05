@@ -186,14 +186,11 @@ jobs:
       - name: Build CLI
         env:
           CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ steps.arch-setup.outputs.other-arch }}
         run: |
           cd cmd/go-duckdb-helper
-          # Linux builds (both amd64 and arm64)
-          GOOS=linux GOARCH=${{ steps.arch-setup.outputs.other-arch }} go build -o go-duckdb-helper-linux-${{ steps.arch-setup.outputs.other-arch }}
-          # macOS builds (both amd64 and arm64)
-          GOOS=darwin GOARCH=${{ steps.arch-setup.outputs.other-arch }} go build -o go-duckdb-helper-darwin-${{ steps.arch-setup.outputs.other-arch }}
-          # Windows builds (both amd64 and arm64)
-          GOOS=windows GOARCH=${{ steps.arch-setup.outputs.other-arch }} go build -o go-duckdb-helper-windows-${{ steps.arch-setup.outputs.other-arch }}.exe
+          go build -o go-duckdb-helper-linux-${{ steps.arch-setup.outputs.other-arch }}
 
       - name: Archive CLI Builds
         uses: actions/upload-artifact@v4
@@ -201,8 +198,6 @@ jobs:
           name: go-duckdb-helper-${{ steps.arch-setup.outputs.other-arch }}
           path: |
             cmd/go-duckdb-helper/go-duckdb-helper-linux-${{ steps.arch-setup.outputs.other-arch }}
-            cmd/go-duckdb-helper/go-duckdb-helper-darwin-${{ steps.arch-setup.outputs.other-arch }}
-            cmd/go-duckdb-helper/go-duckdb-helper-windows-${{ steps.arch-setup.outputs.other-arch }}.exe
           retention-days: 7
 
   resolve-versions:
