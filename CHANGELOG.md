@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0
+
+- Fix release script
+- Prepare for initial release!
+
 ## 0.0.9
 
 - Add a helper CLI for installing extensions
