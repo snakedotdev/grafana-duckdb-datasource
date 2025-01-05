@@ -20,4 +20,27 @@ server:
   npm run server
 
 compose:
-  docker compose up
+  docker compose up -d
+
+logs:
+  docker compose logs -f
+
+compose-down: 
+  docker compose down
+
+e2e-up:
+  docker compose -f docker-compose.test.yml up -d
+e2e-down:
+  docker compose -f docker-compose.test.yml down
+  
+prod-up:
+  docker compose -f docker-compose.prod.yaml up -d
+prod-build:
+  docker compose -f docker-compose.prod.yaml build
+prod-down:
+  docker compose -f docker-compose.prod.yaml down
+
+e2e: 
+  npx playwright test -c e2e/config/test.config.ts
+e2e-debug: 
+  npx playwright test -c e2e/config/test.config.ts --debug --headed
