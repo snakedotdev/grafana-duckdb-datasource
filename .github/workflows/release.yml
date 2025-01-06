@@ -49,21 +49,20 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          # Move plugin AMD64 files
+          # Move plugin AMD64 files (keeping original SHA1)
           mv artifacts/amd64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip
           mv artifacts/amd64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-amd64.zip.sha1
           
-          # Move plugin ARM64 files
+          # Move plugin ARM64 files (keeping original SHA1)
           mv artifacts/arm64/*.zip release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip
           mv artifacts/arm64/*.sha1 release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-arm64.zip.sha1
           
-          # Move CLI files and create SHA1 checksums
-          mv artifacts/cli-amd64/go-duckdb-helper-* release/
-          mv artifacts/cli-arm64/go-duckdb-helper-* release/
-          cd release
-          sha1sum go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64 > go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64.sha1
-          sha1sum go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64 > go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64.sha1
-          cd ..
+          # Move CLI files (keeping original SHA1)
+          mv artifacts/cli-amd64/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64* release/
+          mv artifacts/cli-arm64/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64* release/
+          
+          # Verify all files are present
+          ls -la release/
           
           # Clean up
           rm -rf artifacts
@@ -75,8 +74,10 @@ jobs:
           files: |
             release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip
             release/${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}-*.zip.sha1
-            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-*
-            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-*.sha1
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-amd64.sha1
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64
+            release/go-duckdb-helper-${{ steps.metadata.outputs.plugin-version }}-linux-arm64.sha1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
