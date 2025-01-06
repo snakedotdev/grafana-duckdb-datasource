@@ -191,6 +191,7 @@ jobs:
         run: |
           cd cmd/go-duckdb-helper
           go build -o go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
+          sha1sum go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }} > go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}.sha1
 
       - name: Archive CLI Builds
         uses: actions/upload-artifact@v4
@@ -198,6 +199,7 @@ jobs:
           name: go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-${{ steps.arch-setup.outputs.other-arch }}
           path: |
             cmd/go-duckdb-helper/go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}
+            cmd/go-duckdb-helper/go-duckdb-helper-${{ needs.build.outputs.plugin-version }}-linux-${{ steps.arch-setup.outputs.other-arch }}.sha1
           retention-days: 7
 
   resolve-versions:
