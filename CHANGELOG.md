@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2
+
+- Ensure all installs of go-duckdb are a consistent version
+
+## 0.1.1
+
+- Fix sha references
+
 ## 0.1.0
 
 - Fix release script

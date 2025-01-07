@@ -1,6 +1,6 @@
 {
   "name": "duckdb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "build-prod": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env development",
